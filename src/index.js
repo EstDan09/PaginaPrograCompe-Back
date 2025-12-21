@@ -149,7 +149,12 @@ connectDB().then(() => {
    */
   //require("./routes/reportsTemaplate")(app);
 
+  app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
   require("./routes/auth.js")(app);
+  require("./routes/user.js")(app);
 
 
   /**

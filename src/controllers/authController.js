@@ -5,7 +5,7 @@ const User = require('../models/User');
 exports.loginUser = async (req, res) => {
     try {
         const { username, password } = req.body;
-        const user = await User.findOne({ 'username' : username });
+        const user = await User.findOne({ username });
         if (!user) {
             return res.status(400).json({ message: 'Invalid username or password' });
         }
@@ -25,7 +25,10 @@ exports.loginUser = async (req, res) => {
 exports.registerUser = async (req, res) => {
     try {
         const { username, password, email, role } = req.body;
-        const existingUser = await User.findOne({ username }, 'username' );
+        if (role && !['student', 'coach'].includes(role)) {
+            return res.status(400).json({ message: 'Invalid role' });
+        }
+        const existingUser = await User.findOne({ username });
         if (existingUser) {
             return res.status(400).json({ message: 'Username already exists' });
         }
@@ -40,8 +43,6 @@ exports.registerUser = async (req, res) => {
 
 exports.refreshToken = async (req, res) => {
     try {
-        console.log("Refreshing token...");
-        console.log(req.user);
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
         if (!token) {
