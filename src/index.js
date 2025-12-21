@@ -149,7 +149,7 @@ connectDB().then(() => {
    */
   //require("./routes/reportsTemaplate")(app);
 
-
+  require("./routes/auth.js")(app);
 
 
   /**
