@@ -4,7 +4,7 @@ const StudentGroup = require("../models/StudentGroup");
 
 exports.createGroup = async (req, res) => {
     try {
-        const { name, description, parent_coach } = req.body;
+        const { name, description, parent_coach} = req.body;
         if (!name) {
             return res.status(400).json({ message: 'Name is required' });
         }
@@ -12,14 +12,12 @@ exports.createGroup = async (req, res) => {
             if (!parent_coach) {
                 return res.status(400).json({ message: 'Name and parent_coach are required' });
             }
-            const user = User.findById(parent_coach);
+            const user = await User.findById(parent_coach);
             if (!user || user.role !== 'coach') {
                 return res.status(400).json({ message: 'parent_coach must be a valid coach user ID' });
             }
-        } else if (req.user.role === 'coach') {
-            parent_coach = req.user._id;
         }
-        const group = Group.create({ name, description, parent_coach });
+        const group = await Group.create({ name, description, parent_coach: (parent_coach ? parent_coach : req.user._id) });
         res.status(201).json(group);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });

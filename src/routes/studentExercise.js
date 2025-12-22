@@ -1,8 +1,8 @@
 const StudentExerciseController = require("../controllers/studentExerciseController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const adminMiddleware = require("../middlewares/adminMiddleware");
-const coachMiddleware = require("../middlewares/adminMiddleware");
-const studentMiddleware = require("../middlewares/adminMiddleware");
+const coachMiddleware = require("../middlewares/coachMiddleware");
+const studentMiddleware = require("../middlewares/studentMiddleware");
 
 const admin_ops = [authMiddleware.auth, adminMiddleware.auth];
 const coach_ops = [authMiddleware.auth, coachMiddleware.auth];

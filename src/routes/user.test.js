@@ -22,7 +22,7 @@ describe("User API", () => {
         await User.deleteMany({});
 
         ({ user: testUsers.admin, token: adminToken } = await createAndLoginUser({
-            username: "admin1",
+            username: "admin",
             password: "adminpass",
             role: "admin"
         }));

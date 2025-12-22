@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 const GroupSchema = new Schema({
     name: { type: String, required: true },
     description : { type: String, required: false },
-    parent_creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true, immutable: true },
+    parent_coach: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true, immutable: true },
 });
 
 GroupSchema.pre('remove', async function(next) {
