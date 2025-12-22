@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Group = require("../models/Group");
 const User = require("../models/User");
 const StudentGroup = require("../models/StudentGroup");
@@ -9,6 +10,9 @@ exports.createExercise = async (req, res) => {
         const { name, cf_code, parent_assignment } = req.body;
         if (!name || !parent_assignment || !cf_code) {
             return res.status(400).json({ message: 'Name, cf_code, and parent_assignment are required' });
+        }
+        if (!mongoose.Types.ObjectId.isValid(parent_assignment)) {
+            return res.status(400).json({ message: 'Invalid parent_assignment' });
         }
         const assignment = await Assignment.findById(parent_assignment);
         if (!assignment) {
@@ -41,7 +45,7 @@ exports.getExercises = async (req, res) => {
             const groups = req.user.role === 'coach' ?
                await Group.find({ parent_coach: req.user._id }).select('_id') :
                await StudentGroup.find({ student_id: req.user._id }).select('group_id'); 
-            const groupIds = groups.map(g => g._id);
+            const groupIds = groups.map(g => req.user.role === 'coach' ? g._id : g.group_id);
             const assignments = await Assignment.find({ parent_group: { $in: groupIds } }).select('_id');
             const assignmentIds = assignments.map(a => a._id);
             if (parent_assignment && !assignmentIds.includes(parent_assignment)) {

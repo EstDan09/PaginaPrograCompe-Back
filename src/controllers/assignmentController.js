@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Group = require("../models/Group");
 const StudentGroup = require("../models/StudentGroup");
 const Assignment = require("../models/Assignment");
@@ -7,6 +8,9 @@ exports.createAssignment = async (req, res) => {
         const { title, description, dueDate, parent_group } = req.body;
         if (!title || !parent_group) {
             return res.status(400).json({ message: 'Title and parent_group are required' });
+        }
+        if (!mongoose.Types.ObjectId.isValid(parent_group)) {
+            return res.status(400).json({ message: 'Invalid groupId' });
         }
         const group = await Group.findById(parent_group);
         if (!group) {
@@ -39,7 +43,7 @@ exports.getAssignments = async (req, res) => {
             const groups = req.user.role === 'coach' ? 
                 await Group.find({ parent_coach: req.user._id }).select('_id') :
                 await StudentGroup.find({student_id: req.user._id}).select('group_id');
-            const groupIds = groups.map(g => g._id);
+            const groupIds = groups.map(g => req.user.role === 'coach' ? g._id : g.group_id);
             if (parent_group && !groupIds.includes(parent_group)) {
                 return res.status(403).json({ message: 'You do not have permission to view assignments for this group' });
             } else filter.parent_group = { $in: groupIds };
