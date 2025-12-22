@@ -10,12 +10,18 @@ exports.createStudentExercise = async (req, res) => {
         // TODO : Validate exercise completion with codeforces
         const student_id = req.params.student_id ? req.params.student_id : req.user._id;
         if (req.params.student_id) {
+            if (!student_id || !require('mongoose').Types.ObjectId.isValid(student_id)) {
+                return res.status(400).json({ message: 'Invalid student_id' });
+            }
             const student = await User.findById(student_id);
             if (!student || student.role !== 'student') {
                 return res.status(400).json({ message: 'Invalid student_id' });
             }
         }
         const { exercise_id } = req.body;
+        if (!exercise_id || !require('mongoose').Types.ObjectId.isValid(exercise_id)) {
+            return res.status(400).json({ message: 'Invalid exercise_id' });
+        }
         const exercise = await Exercise.findById(exercise_id);
         if (!exercise) {
             return res.status(400).json({ message: 'Invalid exercise_id' });
@@ -23,11 +29,11 @@ exports.createStudentExercise = async (req, res) => {
         const parent_assignment = exercise.parent_assignment;
         const assignment = await Assignment.findById(parent_assignment);
         const parent_group = assignment.parent_group;
-        const membership = StudentGroup.findOne({student_id, group_id: parent_group});
+        const membership = await StudentGroup.findOne({student_id, group_id: parent_group});
         if (!membership) {
             return res.status(403).json({ message: 'Student may not solve this exercise' });
         }
-        const studentExercise = StudentExercise.create({
+        const studentExercise = await StudentExercise.create({
             student_id,
             exercise_id
         });
@@ -59,9 +65,10 @@ exports.getStudentExercises = async (req, res) => {
             filter.exercise_id = { $in: exerciseIds };
         }
         if (req.user.role === 'student') {
-            if (student_id && student_id !== req.user._id.toString()) {
+            if (student_id) {
                 return res.status(403).json({ message: 'Access denied' });
-            } else filter.student_id = req.user._id;
+            }
+            filter.student_id = req.user._id;
         } else if (req.user.role === 'coach') {
             if (group_id) {
                 const group = await Group.findById(group_id);
