@@ -5,20 +5,19 @@ const AssignmentSchema = new Schema({
     name: { type: String, required: true },
     description: { type: String, required: false },
     due_date: { type: Date, required: false },
-    exercises: [{
-        title: { type: String, required: true },
-        points: { type: Number, required: true },
-        /*
-        codeforces
-        - https://codeforces.com/problemset/problem/1338/C
-        Store as "1338/C"
-        */
-        problem_id: { type: String, required: true, unique: true},
-    }],
-    student_progress: [{ 
-        student_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-        completed_exercises: [{ type: String }]
-    }]
+    parent_group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true, index: true },
+});
+
+AssignmentSchema.pre('remove', async function(next) {
+    try {
+        const exercises = await mongoose.model('Exercise').find({ parent_assignment: this._id });
+        for (const exercise of exercises) {
+            await exercise.remove();
+        }
+        next();
+    } catch (err) {
+        next(err);
+    }
 });
 
 module.exports = mongoose.model('Assignment', AssignmentSchema);

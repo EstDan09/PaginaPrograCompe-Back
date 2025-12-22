@@ -1,6 +1,5 @@
 const express = require("express");
 const connectDB = require("./config/db");
-const methodOverride = require("method-override");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const cors = require("cors");
@@ -9,10 +8,29 @@ const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
 const rateLimit = require("express-rate-limit");
 const compression = require("compression");
+const User = require("./models/User");
 
 dotenv.config();
 const port = process.env.PORT || 3000;
 const app = express();
+
+const seedDatabase = async () => {
+  try {
+    const userCount = await User.countDocuments();
+    if (userCount === 0) {
+      const adminUser = User.create({
+        username: 'admin',
+        password_hash: process.env.ADMIN_PASSWORD,
+        email: 'MoyaBabushkaKuritTrubku',
+        role: 'admin'
+      });
+      console.log('Default admin user created');
+    } else {
+    }
+  } catch (error) {
+    console.error('Error seeding database:', error);
+  }
+};
 
 /**
  * Rate Limiter
@@ -78,7 +96,10 @@ app.use(
  * Connects to MongoDB, enables compression, sets cache headers, and serves static files.
  */
 
-connectDB().then(() => {
+connectDB().then(async () => {
+  // Seed initial data if needed
+  await seedDatabase();
+
   /**
    * Compression Middleware
    * Applies gzip compression to all responses to improve performance.
@@ -155,6 +176,7 @@ connectDB().then(() => {
 
   require("./routes/auth.js")(app);
   require("./routes/user.js")(app);
+  require("./routes/group.js")(app);
 
 
   /**

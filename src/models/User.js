@@ -4,11 +4,10 @@ const { Schema } = mongoose;
 
 const UserSchema = new Schema(
   {
-    username: { type: String, required: true, unique: true, trim: true },
+    username: { type: String, required: true, unique: true, trim: true, index: true },
     password_hash: { type: String, required: true },
     email: { type: String, required: true, trim: true, lowercase: true },
-    role: { type: String, enum: ["student", "coach", "admin"], default: "student" },
-    child_groups: [{ type: Schema.Types.ObjectId, ref: "Group" }],
+    role: { type: String, enum: ["student", "coach", "admin"], default: "student" }
   },
   { timestamps: true }
 );
@@ -16,6 +15,26 @@ const UserSchema = new Schema(
 UserSchema.pre("save", async function () {
   if (this.isModified("password_hash")) {
     this.password_hash = await bcrypt.hash(this.password_hash, 10);
+  }
+});
+
+UserSchema.pre("remove", async function(next) {
+  try {
+    if (this.role === 'student') {
+      const StudentGroup = mongoose.model('StudentGroup');
+      const StudentExercise = mongoose.model('StudentExercise');
+      await StudentGroup.deleteMany({ student_id: this._id });
+      await StudentExercise.deleteMany({ student_id: this._id });
+    } else if (this.role === 'coach') {
+      const Group = mongoose.model('Group');
+      const groups = await Group.find({ parent_creator: this._id });
+      for (const group of groups) {
+        await group.remove();
+      }
+    }
+    next();
+  } catch (err) {
+      next(err);
   }
 });
 

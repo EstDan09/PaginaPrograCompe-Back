@@ -4,9 +4,20 @@ const { Schema } = mongoose;
 const GroupSchema = new Schema({
     name: { type: String, required: true },
     description : { type: String, required: false },
-    creator_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    assignments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Assignment' }]
+    parent_creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+});
+
+GroupSchema.pre('remove', async function(next) {
+    try {
+        const assignments = await mongoose.model('Assignment').find({ parent_group: this._id });
+        for (const assignment of assignments) {
+            await assignment.remove();
+        }
+        await mongoose.model('StudentGroup').deleteMany({ group_id: this._id });
+        next();
+    } catch (err) {
+        next(err);
+    }
 });
 
 module.exports = mongoose.model('Group', GroupSchema);

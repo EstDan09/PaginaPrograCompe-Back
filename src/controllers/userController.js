@@ -29,7 +29,7 @@ exports.getUsers = async (req, res) => {
         if (email) filter.email = email;
         if (role) filter.role = role;
 
-        const users = await User.find(filter, '_id username password_hash email role child_groups' );
+        const users = await User.find(filter, '_id username password_hash email role' );
 
         res.status(200).json(users);
     } catch (error) {
@@ -44,24 +44,13 @@ exports.getUserById = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        if (user.role === 'admin') {
-            res.status(200).json({
-                id: user._id,
-                username: user.username,
-                password_hash: user.password_hash,
-                email: user.email,
-                role: user.role
-            });
-        } else {
-            res.status(200).json({
-                id: user._id,
-                username: user.username,
-                password_hash: user.password_hash,
-                email: user.email,
-                role: user.role,
-                child_groups: user.child_groups
-            });
-        }
+        res.status(200).json({
+            id: user._id,
+            username: user.username,
+            password_hash: user.password_hash,
+            email: user.email,
+            role: user.role
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -71,7 +60,7 @@ exports.getUserById = async (req, res) => {
 exports.updateUser = async (req, res) => {
     try {
         const userId = req.params.id;
-        const { password, email, role, child_groups } = req.body;
+        const { password, email, role } = req.body;
         if (role && !['student', 'coach', 'admin'].includes(role)) {
             return res.status(400).json({ message: 'Invalid role' });
         }
@@ -79,9 +68,8 @@ exports.updateUser = async (req, res) => {
         if (password) updateData.password_hash = password;
         if (email) updateData.email = email;
         if (role) updateData.role = role;
-        if (child_groups) updateData.child_groups = child_groups;
 
-        const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: false });
+        const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
         if (!updatedUser) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -111,24 +99,13 @@ exports.getByUsername = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        if (user.role === 'admin') {
-            res.status(200).json({
-                id: user._id,
-                username: user.username,
-                password_hash: user.password_hash,
-                email: user.email,
-                role: user.role
-            });
-        } else {
-            res.status(200).json({
-                id: user._id,
-                username: user.username,
-                password_hash: user.password_hash,
-                email: user.email,
-                role: user.role,
-                child_groups: user.child_groups
-            });
-        }
+        res.status(200).json({
+            id: user._id,
+            username: user.username,
+            password_hash: user.password_hash,
+            email: user.email,
+            role: user.role
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -149,7 +126,7 @@ exports.safeGetUsers = async (req, res) => {
             filter.role = role;
         } else filter.role = { $ne: 'admin' };
 
-        const users = await User.find(filter, '_id username email role child_groups' );
+        const users = await User.find(filter, '_id username email role' );
 
         res.status(200).json(users);
     } catch (error) {
@@ -167,7 +144,7 @@ exports.safeGetUserById = async (req, res) => {
         if (user.role === 'admin') {
             return res.status(403).json({ message: 'Access denied. Cannot view admin details.' });
         }
-        res.status(200).json({ id: user._id, username: user.username, email: user.email, role: user.role, child_groups: user.child_groups });
+        res.status(200).json({ id: user._id, username: user.username, email: user.email, role: user.role });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -181,7 +158,7 @@ exports.safeUpdateUser = async (req, res) => {
         if (password) updateData.password_hash = password;
         if (email) updateData.email = email;
 
-        const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: false });
+        const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
         if (!updatedUser) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -211,22 +188,12 @@ exports.getMyProfile = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        if (user.role === 'admin') {
-            res.status(200).json({
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                role: user.role
-            });
-        } else {
-            res.status(200).json({
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                role: user.role,
-                child_groups: user.child_groups
-            });
-        }
+        res.status(200).json({
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            role: user.role
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -242,7 +209,7 @@ exports.safeGetByUsername = async (req, res) => {
         if (user.role === 'admin') {
             return res.status(403).json({ message: 'Access denied. Cannot view admin details.' });
         }
-        res.status(200).json({ id: user._id, username: user.username, email: user.email, role: user.role, child_groups: user.child_groups });
+        res.status(200).json({ id: user._id, username: user.username, email: user.email, role: user.role });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
