@@ -1,6 +1,6 @@
-const User = require("../models/userModel");
-const StudentGroup = require("../models/studentGroupModel");
-const Group = require("../models/groupModel");
+const User = require("../models/User");
+const StudentGroup = require("../models/StudentGroup");
+const Group = require("../models/Group");
 
 exports.createStudentGroup = async (req, res) => {
     try {
