@@ -11,11 +11,8 @@ const normal_ops = [authMiddleware.auth];
 
 module.exports = (app) => {
     app.post("/student-group/create", coach_ops, StudentGroupController.createStudentGroup);
-    app.get("/student-group/get", admin_ops, StudentGroupController.getStudentGroups);
+    app.get("/student-group/get", normal_ops, StudentGroupController.getStudentGroups);
     app.get("/student-group/get/:id", admin_ops, StudentGroupController.getStudentGroupById);
     app.put("/student-group/update/:id", admin_ops, StudentGroupController.updateStudentGroup);
     app.delete("/student-group/delete/:id", coach_ops, StudentGroupController.deleteStudentGroup);
-
-    app.get("/student-group/get-by-student", student_ops, StudentGroupController.getStudentGroupsByStudent);
-    app.get("/student-group/get-by-group/:group_id", normal_ops, StudentGroupController.getStudentGroupsByGroup);
 }
