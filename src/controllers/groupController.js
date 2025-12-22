@@ -1,5 +1,6 @@
 const Group = require("../models/Group");
 const User = require("../models/User");
+const StudentGroup = require("../models/StudentGroup");
 
 exports.createGroup = async (req, res) => {
     try {
@@ -57,6 +58,14 @@ exports.getGroupById = async (req, res) => {
         const group = await Group.findById(groupId);
         if (!group) {
             return res.status(404).json({ message: 'Group not found' });
+        }
+        if (req.user.role === 'student') {
+            const membership = await StudentGroup.findOne({ student_id: req.user._id, group_id: groupId });
+            if (!membership) {
+                return res.status(403).json({ message: 'Access denied' });
+            }
+            res.status(200).json(group);
+            return;
         }
         if (req.user.role === 'admin' || (req.user.role === 'coach' && group.parent_coach.toString() === req.user._id.toString())) {
             res.status(200).json(group);

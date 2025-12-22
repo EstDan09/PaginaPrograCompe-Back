@@ -177,6 +177,10 @@ connectDB().then(async () => {
   require("./routes/auth.js")(app);
   require("./routes/user.js")(app);
   require("./routes/group.js")(app);
+  require("./routes/assignment.js")(app);
+  //require("./routes/exercise.js")(app);
+  //require("./routes/studentGroup.js")(app);
+  //require("./routes/studentExercise.js")(app);
 
 
   /**
