@@ -110,7 +110,7 @@ exports.deleteAssignment = async (req, res) => {
         if (req.user.role === 'coach' && group.parent_coach.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'You do not have permission to delete this assignment' });
         }
-        await assignment.remove();
+        await assignment.deleteOne();
         res.status(200).json({ message: 'Assignment deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });

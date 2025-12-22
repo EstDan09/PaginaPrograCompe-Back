@@ -98,7 +98,7 @@ exports.deleteGroup = async (req, res) => {
         if (req.user.role === 'coach' && group.parent_coach.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'Access denied' });
         }
-        await group.remove();
+        await group.deleteOne();
         res.status(200).json({ message: 'Group deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });

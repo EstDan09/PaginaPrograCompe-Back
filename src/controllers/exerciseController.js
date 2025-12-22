@@ -115,7 +115,7 @@ exports.deleteExercise = async (req, res) => {
         if (req.user.role === 'coach' && group.parent_coach.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'You do not have permission to delete this exercise' });
         }
-        await exercise.remove();
+        await exercise.deleteOne();
         res.status(200).json({ message: 'Exercise deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });

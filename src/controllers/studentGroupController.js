@@ -73,7 +73,7 @@ exports.deleteStudentGroup = async (req, res) => {
                 return res.status(403).json({ message: 'You do not have permission to delete this student from the group' });
             }
         }
-        await studentGroup.remove();
+        await studentGroup.deleteOne();
         res.status(200).json({ message: 'StudentGroup deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });

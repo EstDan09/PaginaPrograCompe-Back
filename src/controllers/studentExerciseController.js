@@ -105,7 +105,7 @@ exports.deleteStudentExercise = async (req, res) => {
         if (!studentExercise) {
             return res.status(404).json({ message: 'StudentExercise not found' });
         }
-        await studentExercise.remove();
+        await studentExercise.deleteOne();
         res.status(200).json({ message: 'Student exercise deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
