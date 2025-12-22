@@ -5,11 +5,11 @@ const Assignment = require("../models/Assignment");
 
 exports.createAssignment = async (req, res) => {
     try {
-        const { title, description, dueDate, groupId } = req.body;
-        if (!title || !groupId) {
-            return res.status(400).json({ message: 'Title and groupId are required' });
+        const { title, description, dueDate, parent_group } = req.body;
+        if (!title || !parent_group) {
+            return res.status(400).json({ message: 'Title and parent_group are required' });
         }
-        const group = await Group.findById(groupId);
+        const group = await Group.findById(parent_group);
         if (!group) {
             return res.status(400).json({ message: 'Invalid groupId' });
         }
@@ -20,7 +20,7 @@ exports.createAssignment = async (req, res) => {
             title,
             description,
             dueDate,
-            parent_group: groupId
+            parent_group
         });
         res.status(201).json(newAssignment);
     } catch (error) {
