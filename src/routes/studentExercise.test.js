@@ -36,12 +36,6 @@ describe('StudentExercise API', () => {
 
     beforeAll(async () => {
         await mongoose.connect(process.env.DB_URI);
-        await User.deleteMany({});
-        await Group.deleteMany({});
-        await StudentGroup.deleteMany({});
-        await Assignment.deleteMany({});
-        await Exercise.deleteMany({});
-        await StudentExercise.deleteMany({});
 
         ({ user: testUsers.admin, token: adminToken } = await createAndLoginUser({
             username: 'admin-se',
@@ -73,7 +67,6 @@ describe('StudentExercise API', () => {
             role: 'student'
         }));
 
-        // Create test groups
         const coachGroupRes = await request(app)
             .post('/group/create')
             .set('Authorization', `Bearer ${coachToken}`)
@@ -86,11 +79,9 @@ describe('StudentExercise API', () => {
             .send({ name: 'Coach2 Group', description: 'Group for coach2' });
         testGroups.coach2Group = coach2GroupRes.body;
 
-        // Add students to groups
         await StudentGroup.create({ student_id: testUsers.student._id, group_id: testGroups.coachGroup._id });
         await StudentGroup.create({ student_id: testUsers.student2._id, group_id: testGroups.coach2Group._id });
 
-        // Create test assignments
         const coachAssignmentRes = await request(app)
             .post('/assignment/create')
             .set('Authorization', `Bearer ${coachToken}`)
@@ -113,7 +104,6 @@ describe('StudentExercise API', () => {
             });
         testAssignments.coach2Assignment = coach2AssignmentRes.body;
 
-        // Create test exercises
         const coachExerciseRes = await request(app)
             .post('/exercise/create')
             .set('Authorization', `Bearer ${coachToken}`)
@@ -136,13 +126,7 @@ describe('StudentExercise API', () => {
     });
 
     afterAll(async () => {
-        // Clean up
-        await StudentExercise.deleteMany({});
-        await Exercise.deleteMany({});
-        await Assignment.deleteMany({});
-        await StudentGroup.deleteMany({});
-        await Group.deleteMany({});
-        await User.deleteMany({});
+        await mongoose.connection.dropDatabase();
         await mongoose.connection.close();
     });
 
@@ -292,7 +276,7 @@ describe('StudentExercise API', () => {
             expect(res.statusCode).toBe(200);
             expect(res.body).toHaveProperty('studentExercises');
             expect(Array.isArray(res.body.studentExercises)).toBe(true);
-            expect(res.body.studentExercises.length).toBe(2); // Both created exercises
+            expect(res.body.studentExercises.length).toBe(2);
         });
 
         it('can filter by exercise_id', async () => {
@@ -400,7 +384,6 @@ describe('StudentExercise API', () => {
             expect(res.statusCode).toBe(200);
             expect(res.body.message).toBe('Student exercise deleted successfully');
 
-            // Verify it's deleted
             const checkRes = await request(app)
                 .get(`/student-exercise/get/${testStudentExercises.studentExercise._id}`)
                 .set('Authorization', `Bearer ${adminToken}`);

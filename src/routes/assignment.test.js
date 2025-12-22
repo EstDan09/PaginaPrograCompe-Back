@@ -25,10 +25,6 @@ describe('Assignment API', () => {
 
     beforeAll(async () => {
         await mongoose.connect(process.env.DB_URI);
-        await User.deleteMany({});
-        await Group.deleteMany({});
-        await StudentGroup.deleteMany({});
-        await Assignment.deleteMany({});
 
         ({ user: testUsers.admin, token: adminToken } = await createAndLoginUser({
             username: 'admin',
@@ -71,21 +67,18 @@ describe('Assignment API', () => {
         const coachAssignmentRes = await request(app)
             .post('/assignment/create')
             .set('Authorization', `Bearer ${coachToken}`)
-            .send({ title: 'Coach Assignment', description: 'Assignment for coach', dueDate: new Date(), parent_group: testGroups.coachGroup._id });
+            .send({ title: 'Coach Assignment', description: 'Assignment for coach', due_date: new Date(), parent_group: testGroups.coachGroup._id });
         testAssignments.coachAssignment = coachAssignmentRes.body;
 
         const coach2AssignmentRes = await request(app)
             .post('/assignment/create')
             .set('Authorization', `Bearer ${coachToken2}`)
-            .send({ title: 'Coach2 Assignment', description: 'Assignment for coach2', dueDate: new Date(), parent_group: testGroups.coach2Group._id });
+            .send({ title: 'Coach2 Assignment', description: 'Assignment for coach2', due_date: new Date(), parent_group: testGroups.coach2Group._id });
         testAssignments.coach2Assignment = coach2AssignmentRes.body;
     });
 
     afterAll(async () => {
-        await Assignment.deleteMany({});
-        await StudentGroup.deleteMany({});
-        await Group.deleteMany({});
-        await User.deleteMany({});
+        await mongoose.connection.dropDatabase();
         await mongoose.connection.close();
     });
 
@@ -94,7 +87,7 @@ describe('Assignment API', () => {
             const res = await request(app)
                 .post('/assignment/create')
                 .set('Authorization', `Bearer ${coachToken}`)
-                .send({ title: 'New Assignment', description: 'Description', dueDate: new Date(), parent_group: testGroups.coachGroup._id });
+                .send({ title: 'New Assignment', description: 'Description', due_date: new Date(), parent_group: testGroups.coachGroup._id });
             expect(res.status).toBe(201);
             expect(res.body).toHaveProperty('_id');
             expect(res.body.title).toBe('New Assignment');
@@ -104,7 +97,7 @@ describe('Assignment API', () => {
             const res = await request(app)
                 .post('/assignment/create')
                 .set('Authorization', `Bearer ${coachToken}`)
-                .send({ title: 'New Assignment', description: 'Description', dueDate: new Date(), parent_group: testGroups.coach2Group._id });
+                .send({ title: 'New Assignment', description: 'Description', due_date: new Date(), parent_group: testGroups.coach2Group._id });
             expect(res.status).toBe(403);
         });
 
@@ -112,7 +105,7 @@ describe('Assignment API', () => {
             const res = await request(app)
                 .post('/assignment/create')
                 .set('Authorization', `Bearer ${adminToken}`)
-                .send({ title: 'Admin Assignment', description: 'Description', dueDate: new Date(), parent_group: testGroups.coachGroup._id });
+                .send({ title: 'Admin Assignment', description: 'Description', due_date: new Date(), parent_group: testGroups.coachGroup._id });
             expect(res.status).toBe(201);
             expect(res.body.title).toBe('Admin Assignment');
         });
@@ -121,14 +114,14 @@ describe('Assignment API', () => {
             const res = await request(app)
                 .post('/assignment/create')
                 .set('Authorization', `Bearer ${studentToken}`)
-                .send({ title: 'Student Assignment', description: 'Description', dueDate: new Date(), parent_group: testGroups.coachGroup._id });
+                .send({ title: 'Student Assignment', description: 'Description', due_date: new Date(), parent_group: testGroups.coachGroup._id });
             expect(res.status).toBe(403);
         });
 
         it('unauthenticated user cannot create assignment', async () => {
             const res = await request(app)
                 .post('/assignment/create')
-                .send({ title: 'Unauth Assignment', description: 'Description', dueDate: new Date(), parent_group: testGroups.coachGroup._id });
+                .send({ title: 'Unauth Assignment', description: 'Description', due_date: new Date(), parent_group: testGroups.coachGroup._id });
             expect(res.status).toBe(401);
         });
 
@@ -136,7 +129,7 @@ describe('Assignment API', () => {
             const res = await request(app)
                 .post('/assignment/create')
                 .set('Authorization', `Bearer ${coachToken}`)
-                .send({ description: 'Description', dueDate: new Date(), parent_group: testGroups.coachGroup._id });
+                .send({ description: 'Description', due_date: new Date(), parent_group: testGroups.coachGroup._id });
             expect(res.status).toBe(400);
         });
 
@@ -144,7 +137,7 @@ describe('Assignment API', () => {
             const res = await request(app)
                 .post('/assignment/create')
                 .set('Authorization', `Bearer ${coachToken}`)
-                .send({ title: 'Title', description: 'Description', dueDate: new Date() });
+                .send({ title: 'Title', description: 'Description', due_date: new Date() });
             expect(res.status).toBe(400);
         });
 
@@ -152,7 +145,7 @@ describe('Assignment API', () => {
             const res = await request(app)
                 .post('/assignment/create')
                 .set('Authorization', `Bearer ${coachToken}`)
-                .send({ title: 'Title', description: 'Description', dueDate: new Date(), parent_group: 'invalid' });
+                .send({ title: 'Title', description: 'Description', due_date: new Date(), parent_group: 'invalid' });
             expect(res.status).toBe(400);
         });
     });
@@ -309,7 +302,7 @@ describe('Assignment API', () => {
             const createRes = await request(app)
                 .post('/assignment/create')
                 .set('Authorization', `Bearer ${coachToken}`)
-                .send({ title: 'To Delete', description: 'Description', dueDate: new Date(), parent_group: testGroups.coachGroup._id });
+                .send({ title: 'To Delete', description: 'Description', due_date: new Date(), parent_group: testGroups.coachGroup._id });
             const assignmentId = createRes.body._id;
 
             const res = await request(app)
@@ -329,7 +322,7 @@ describe('Assignment API', () => {
             const createRes = await request(app)
                 .post('/assignment/create')
                 .set('Authorization', `Bearer ${coachToken}`)
-                .send({ title: 'To Delete by Admin', description: 'Description', dueDate: new Date(), parent_group: testGroups.coachGroup._id });
+                .send({ title: 'To Delete by Admin', description: 'Description', due_date: new Date(), parent_group: testGroups.coachGroup._id });
             const assignmentId = createRes.body._id;
 
             const res = await request(app)

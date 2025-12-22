@@ -19,7 +19,6 @@ describe("User API", () => {
 
     beforeAll(async () => {
         await mongoose.connect(process.env.DB_URI);
-        await User.deleteMany({});
 
         ({ user: testUsers.admin, token: adminToken } = await createAndLoginUser({
             username: "admin",
@@ -41,7 +40,6 @@ describe("User API", () => {
     });
 
     afterAll(async () => {
-        //await new Promise(r => setTimeout(r, 100));
         await mongoose.connection.dropDatabase();
         await mongoose.disconnect();
     });

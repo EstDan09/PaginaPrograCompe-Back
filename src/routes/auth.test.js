@@ -8,7 +8,6 @@ describe("Auth API", () => {
 
     beforeAll(async () => {
         await mongoose.connect(process.env.DB_URI);
-        await User.deleteMany({});
 
         await User.create({
             username: "admin",

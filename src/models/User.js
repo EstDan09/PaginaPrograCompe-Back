@@ -10,9 +10,7 @@ const UserSchema = new Schema({
 }, { timestamps: true });
 
 UserSchema.pre("save", async function () {
-    if (this.isModified("password_hash")) {
-        this.password_hash = await bcrypt.hash(this.password_hash, 10);
-    }
+    if (this.isModified("password_hash")) this.password_hash = await bcrypt.hash(this.password_hash, 10);
 });
 
 UserSchema.pre("remove", async function (next) {

@@ -5,7 +5,7 @@ const Assignment = require("../models/Assignment");
 
 exports.createAssignment = async (req, res) => {
     try {
-        const { title, description, dueDate, parent_group } = req.body;
+        const { title, description, due_date, parent_group } = req.body;
         if (!title || !parent_group) {
             return res.status(400).json({ message: 'Title and parent_group are required' });
         }
@@ -22,7 +22,7 @@ exports.createAssignment = async (req, res) => {
         const newAssignment = await Assignment.create({
             title,
             description,
-            dueDate,
+            due_date,
             parent_group
         });
         res.status(201).json(newAssignment);
@@ -33,11 +33,11 @@ exports.createAssignment = async (req, res) => {
 
 exports.getAssignments = async (req, res) => {
     try {
-        const { title, description, dueDate, parent_group } = req.query;
+        const { title, description, due_date, parent_group } = req.query;
         const filter = {};
         if (title) filter.title = title;
         if (description) filter.description = description;
-        if (dueDate) filter.dueDate = dueDate;
+        if (due_date) filter.due_date = due_date;
         if (parent_group) filter.parent_group = parent_group;
         if (req.user.role !== 'admin') {
             const groups = req.user.role === 'coach' ? 
@@ -91,11 +91,11 @@ exports.updateAssignment = async (req, res) => {
         if (req.user.role === 'coach' && group.parent_coach.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'You do not have permission to update this assignment' });
         }
-        const { title, description, dueDate } = req.body;
+        const { title, description, due_date } = req.body;
         const updateData = {};
         if (title) updateData.title = title;
         if (description) updateData.description = description;
-        if (dueDate) updateData.dueDate = dueDate;
+        if (due_date) updateData.due_date = due_date;
         const updatedAssignment = await Assignment.findByIdAndUpdate(assignmentId, updateData, { new: true });
         res.status(200).json(updatedAssignment);
     } catch (error) {

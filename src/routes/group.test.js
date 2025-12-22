@@ -23,9 +23,6 @@ describe("Group API", () => {
 
     beforeAll(async () => {
         await mongoose.connect(process.env.DB_URI);
-        await User.deleteMany({});
-        await Group.deleteMany({});
-        await StudentGroup.deleteMany({});
 
         ({ user: testUsers.admin, token: adminToken } = await createAndLoginUser({
             username: "admin",
@@ -275,7 +272,6 @@ describe("Group API", () => {
             const res = await request(app)
                 .delete(`/group/delete/${testGroups.adminGroup._id}`)
                 .set("Authorization", `Bearer ${coachToken}`);
-            console.log(res.body);
             expect(res.statusCode).toBe(403);
         });
 

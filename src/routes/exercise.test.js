@@ -34,11 +34,6 @@ describe('Exercise API', () => {
 
     beforeAll(async () => {
         await mongoose.connect(process.env.DB_URI);
-        await User.deleteMany({});
-        await Group.deleteMany({});
-        await StudentGroup.deleteMany({});
-        await Assignment.deleteMany({});
-        await Exercise.deleteMany({});
 
         ({ user: testUsers.admin, token: adminToken } = await createAndLoginUser({
             username: 'admin',
@@ -64,7 +59,6 @@ describe('Exercise API', () => {
             role: 'student'
         }));
 
-        // Create test groups
         const coachGroupRes = await request(app)
             .post('/group/create')
             .set('Authorization', `Bearer ${coachToken}`)
@@ -77,10 +71,8 @@ describe('Exercise API', () => {
             .send({ name: 'Coach2 Group', description: 'Group for coach2' });
         testGroups.coach2Group = coach2GroupRes.body;
 
-        // Add student to coach's group
         await StudentGroup.create({ student_id: testUsers.student._id, group_id: testGroups.coachGroup._id });
 
-        // Create test assignments
         const coachAssignmentRes = await request(app)
             .post('/assignment/create')
             .set('Authorization', `Bearer ${coachToken}`)
@@ -93,7 +85,6 @@ describe('Exercise API', () => {
             .send({ title: 'Coach2 Assignment', description: 'Assignment for coach2', dueDate: new Date(), parent_group: testGroups.coach2Group._id });
         testAssignments.coach2Assignment = coach2AssignmentRes.body;
 
-        // Create test exercises
         const coachExerciseRes = await request(app)
             .post('/exercise/create')
             .set('Authorization', `Bearer ${coachToken}`)
@@ -108,12 +99,7 @@ describe('Exercise API', () => {
     });
 
     afterAll(async () => {
-        // Clean up
-        await Exercise.deleteMany({});
-        await Assignment.deleteMany({});
-        await StudentGroup.deleteMany({});
-        await Group.deleteMany({});
-        await User.deleteMany({});
+        await mongoose.connection.dropDatabase();
         await mongoose.connection.close();
     });
 
@@ -342,7 +328,6 @@ describe('Exercise API', () => {
 
     describe('Delete exercise', () => {
         it('coach can delete their own exercise', async () => {
-            // Create a new exercise to delete
             const createRes = await request(app)
                 .post('/exercise/create')
                 .set('Authorization', `Bearer ${coachToken}`)
@@ -363,7 +348,6 @@ describe('Exercise API', () => {
         });
 
         it('admin can delete any exercise', async () => {
-            // Create another exercise
             const createRes = await request(app)
                 .post('/exercise/create')
                 .set('Authorization', `Bearer ${coachToken}`)

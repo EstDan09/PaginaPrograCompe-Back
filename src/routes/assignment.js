@@ -15,9 +15,9 @@ module.exports = (app) => {
      * 
      * Previous authentication: Admin/Coach
      * 
-     * Body Input: { title: string, description: string, dueDate?: Date, parent_group: string }
+     * Body Input: { title: string, description: string, due_date?: Date, parent_group: string }
      * 
-     * Body Output: { _id: string, title: string, description: string, dueDate?: Date, parent_group: string }
+     * Body Output: { _id: string, title: string, description: string, due_date?: Date, parent_group: string }
      */
     app.post("/assignment/create", coach_ops, AssignmentController.createAssignment);
 
@@ -26,9 +26,9 @@ module.exports = (app) => {
      * 
      * Previous authentication: Basic
      * 
-     * UrlQuery Input: id? [string], title? [string], description? [string], dueDate? [Date], parent_group? [string]
+     * UrlQuery Input: id? [string], title? [string], description? [string], due_date? [Date], parent_group? [string]
      * 
-     * Body Output: { _id: string, title: string, description: string, dueDate?: Date, parent_group: string }[]
+     * Body Output: { _id: string, title: string, description: string, due_date?: Date, parent_group: string }[]
      */
     app.get("/assignment/get", normal_ops, AssignmentController.getAssignments);
 
@@ -39,7 +39,7 @@ module.exports = (app) => {
      * 
      * UrlParam Input: :id [string]
      * 
-     * Body Output: { _id: string, title: string, description: string, dueDate?: Date, parent_group: string }
+     * Body Output: { _id: string, title: string, description: string, due_date?: Date, parent_group: string }
      */
     app.get("/assignment/get/:id", normal_ops, AssignmentController.getAssignmentById);
 
@@ -48,10 +48,10 @@ module.exports = (app) => {
      * 
      * Previous authentication: Admin/Coach
      * 
-     * Body Input: { _id: string, title: string, description: string, dueDate?: Date }
+     * Body Input: { _id: string, title: string, description: string, due_date?: Date }
      * UrlParam Input: :id [string]
      * 
-     * Body Output: { _id: string, title: string, description: string, dueDate?: Date, parent_group: string }
+     * Body Output: { _id: string, title: string, description: string, due_date?: Date, parent_group: string }
      */
     app.put("/assignment/update/:id", coach_ops, AssignmentController.updateAssignment);
 
