@@ -13,17 +13,10 @@ exports.createStudentGroup = async (req, res) => {
         if (!group) {
             return res.status(400).json({ message: 'Invalid group_id' });
         }
-        const existingEntry = await StudentGroup.findOne({ student_id, group_id });
-        if (existingEntry) {
-            return res.status(400).json({ message: 'Student is already in the group' });
+        if (req.user.role === 'coach' && group.parent_coach.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'You do not have permission to add students to this group' });
         }
-        if (req.user.role === 'coach') {
-            if (group.parent_coach.toString() !== req.user._id.toString()) {
-                return res.status(403).json({ message: 'You do not have permission to add students to this group' });
-            }
-        }
-        const newStudentGroup = new StudentGroup({ student_id, group_id });
-        await newStudentGroup.save();
+        const newStudentGroup = StudentGroup.create({ student_id, group_id });
         res.status(201).json(newStudentGroup);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
@@ -62,24 +55,6 @@ exports.getStudentGroupById = async (req, res) => {
             return res.status(404).json({ message: 'StudentGroup not found' });
         }
         res.status(200).json(studentGroup);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
-exports.updateStudentGroup = async (req, res) => {
-    try {
-        const studentGroupId = req.params.id;
-        const studentGroup = await StudentGroup.findById(studentGroupId);
-        if (!studentGroup) {
-            return res.status(404).json({ message: 'StudentGroup not found' });
-        }
-        const { student_id, group_id } = req.body;
-        const updateData = {};
-        if (student_id) updateData.student_id = student_id;
-        if (group_id) updateData.group_id = group_id;
-        const updatedStudentGroup = await StudentGroup.findByIdAndUpdate(studentGroupId, updateData, { new: true });
-        res.status(200).json(updatedStudentGroup);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

@@ -10,9 +10,47 @@ const student_ops = [authMiddleware.auth, studentMiddleware.auth];
 const normal_ops = [authMiddleware.auth];
 
 module.exports = (app) => {
+    /**
+     * Create student group link
+     * 
+     * Previous authentication: Admin/Coach
+     * 
+     * Body Input: { group_id: string, student_id: string }
+     * 
+     * Body Output: { _id: string, group_id: string, student_id: string }
+     */
     app.post("/student-group/create", coach_ops, StudentGroupController.createStudentGroup);
+
+    /**
+     * Get student group links by filters
+     * 
+     * Previous authentication: Basic
+     * 
+     * UrlQuery Input: id? [string], group_id? [string], student_id? [string]
+     * 
+     * Body Output: { _id: string, group_id: string, student_id: string }[]
+     */
     app.get("/student-group/get", normal_ops, StudentGroupController.getStudentGroups);
+
+    /**
+     * Get strung group links by id
+     * 
+     * Previous authentication: Admin
+     * 
+     * UrlParam Input: :id [string]
+     * 
+     * Body Output: { _id: string, group_id: string, student_id: string }
+     */
     app.get("/student-group/get/:id", admin_ops, StudentGroupController.getStudentGroupById);
-    app.put("/student-group/update/:id", admin_ops, StudentGroupController.updateStudentGroup);
+
+    /**
+     * Delete student group link
+     * 
+     * Previous authentication: Admin/Coach
+     * 
+     * UrlParam Input: :id [string]
+     * 
+     * Body Output: N/A
+     */
     app.delete("/student-group/delete/:id", coach_ops, StudentGroupController.deleteStudentGroup);
 }

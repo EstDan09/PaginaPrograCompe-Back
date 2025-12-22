@@ -4,8 +4,8 @@ const { Schema } = mongoose;
 const ExerciseSchema = new Schema({
     name: { type: String, required: true },
     // Contest id + problem letter, e.g., "1234A"
-    cf_code: { type: String, required: true },
-    parent_assignment: { type: mongoose.Schema.Types.ObjectId, ref: 'Assignment', required: true, index: true },
+    cf_code: { type: String, required: true, immutable: true },
+    parent_assignment: { type: mongoose.Schema.Types.ObjectId, ref: 'Assignment', required: true, index: true, immutable: true },
 });
 
 ExerciseSchema.pre('remove', async function(next) {

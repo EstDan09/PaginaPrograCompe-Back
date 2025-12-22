@@ -3,39 +3,35 @@ const Exercise = require("../models/Exercise");
 const User = require("../models/User");
 const Assignment = require("../models/Assignment");
 const Group = require("../models/Group");
+const StudentGroup = require("../models/StudentGroup");
 
 exports.createStudentExercise = async (req, res) => {
     try {
-        // TODO : Validate exercise permission and completion
+        // TODO : Validate exercise completion with codeforces
+        const student_id = req.params.student_id ? req.params.student_id : req.user._id;
         if (req.params.student_id) {
-            const student_id = req.params.student_id;
             const student = await User.findById(student_id);
             if (!student || student.role !== 'student') {
                 return res.status(400).json({ message: 'Invalid student_id' });
             }
-            const { exercise_id } = req.body;
-            const exercise = await Exercise.findById(exercise_id);
-            if (!exercise) {
-                return res.status(400).json({ message: 'Invalid exercise_id' });
-            }
-            const studentExercise = StudentExercise.create({
-                student_id,
-                exercise_id
-            });
-            res.status(201).json({ message: 'Student exercise created successfully', studentExercise });
-        } else {
-            const student_id = req.user._id;
-            const { exercise_id } = req.body;
-            const exercise = await Exercise.findById(exercise_id);
-            if (!exercise) {
-                return res.status(400).json({ message: 'Invalid exercise_id' });
-            }
-            const studentExercise = StudentExercise.create({
-                student_id,
-                exercise_id
-            });
-            res.status(201).json({ message: 'Student exercise created successfully', studentExercise });
         }
+        const { exercise_id } = req.body;
+        const exercise = await Exercise.findById(exercise_id);
+        if (!exercise) {
+            return res.status(400).json({ message: 'Invalid exercise_id' });
+        }
+        const parent_assignment = exercise.parent_assignment;
+        const assignment = await Assignment.findById(parent_assignment);
+        const parent_group = assignment.parent_group;
+        const membership = StudentGroup.findOne({student_id, group_id: parent_group});
+        if (!membership) {
+            return res.status(403).json({ message: 'Student may not solve this exercise' });
+        }
+        const studentExercise = StudentExercise.create({
+            student_id,
+            exercise_id
+        });
+        res.status(201).json({ message: 'Student exercise created successfully', studentExercise });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -44,39 +40,18 @@ exports.createStudentExercise = async (req, res) => {
 exports.getStudentExercises = async (req, res) => {
     try {
         const {group_id, assignment_id, exercise_id, student_id} = req.query;
+        if ((group_id ? 1 : 0) + (assignment_id ? 1 : 0) + (exercise_id ? 1 : 0) > 1) {
+            return res.status(400).json({ message: 'Query at most one of group_id, assignment_id, or exercise_id' });
+        }
         const filter = {};
         if (student_id) filter.student_id = student_id;
-        if (exercise_id) {
-            const exercise = await Exercise.findById(exercise_id);
-            if (!exercise) {
-                return res.status(400).json({ message: 'Invalid exercise_id' });
-            }
-            if (assignment_id && assignment_id != exercise.parent_assignment) {
-                return res.status(400).json({ message: 'exercise_id does not belong to the specified assignment_id' });
-            }
-            assignment_id = exercise.parent_assignment;
-            const assignment = await Assignment.findById(exercise.parent_assignment);
-            if (group_id && group_id != assignment.parent_group) {
-                return res.status(400).json({ message: 'exercise_id does not belong to the specified group_id' });
-            }
-            group_id = assignment.parent_group;
-        } else if (assignment_id) {
-            const assignment = await Assignment.findById(assignment_id);
-            if (!assignment) {
-                return res.status(400).json({ message: 'Invalid assignment_id' });
-            }
-            if (group_id && group_id != assignment.parent_group) {
-                return res.status(400).json({ message: 'assignment_id does not belong to the specified group_id' });
-            }
-            group_id = assignment.parent_group;
+        if (exercise_id) filter.exercise_id = exercise_id;
+        if (assignment_id) {
             const exercises = await Exercise.find({ parent_assignment: assignment_id }).select('_id');
             const exerciseIds = exercises.map(e => e._id);
             filter.exercise_id = { $in: exerciseIds };
-        } else if (group_id) {
-            const group = await Group.findById(group_id);
-            if (!group) {
-                return res.status(400).json({ message: 'Invalid group_id' });
-            }
+        }
+        if (group_id) {
             const assignments = await Assignment.find({ parent_group: group_id }).select('_id');
             const assignmentIds = assignments.map(a => a._id);
             const exercises = await Exercise.find({ parent_assignment: { $in: assignmentIds } }).select('_id');

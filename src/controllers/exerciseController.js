@@ -37,15 +37,16 @@ exports.getExercises = async (req, res) => {
         if (name) filter.name = name;
         if (cf_code) filter.cf_code = cf_code;
         if (parent_assignment) filter.parent_assignment = parent_assignment;
-
-        if (req.user.role === 'coach') {
-            const coachGroups = await Group.find({ parent_coach: req.user._id }).select('_id');
-            const coachGroupIds = coachGroups.map(g => g._id);
-            const coachAssignments = await Assignment.find({ parent_group: { $in: coachGroupIds } }).select('_id');
-            const coachAssignmentIds = coachAssignments.map(a => a._id);
-            if (parent_assignment && !coachAssignmentIds.includes(parent_assignment)) {
+        if (req.user.role !== 'admin') {
+            const groups = req.user.role === 'coach' ?
+               await Group.find({ parent_coach: req.user._id }).select('_id') :
+               await StudentGroup.find({ student_id: req.user._id }).select('group_id'); 
+            const groupIds = groups.map(g => g._id);
+            const assignments = await Assignment.find({ parent_group: { $in: groupIds } }).select('_id');
+            const assignmentIds = assignments.map(a => a._id);
+            if (parent_assignment && !assignmentIds.includes(parent_assignment)) {
                 return res.status(403).json({ message: 'You do not have permission to view exercises for this assignment' });
-            } else filter.parent_assignment = { $in: coachAssignmentIds };
+            } else filter.parent_assignment = { $in: assignmentIds };
         }
         const exercises = await Exercise.find(filter);
         res.status(200).json(exercises);
@@ -89,23 +90,12 @@ exports.updateExercise = async (req, res) => {
         }
         const assignment = await Assignment.findById(exercise.parent_assignment);
         const group = await Group.findById(assignment.parent_group);
-        if (req.user.role === 'admin') {
-            const { name, cf_code, parent_assignment } = req.body;
-            const updateData = {};
-            if (name) updateData.name = name;
-            if (cf_code) updateData.cf_code = cf_code;
-            if (parent_assignment) updateData.parent_assignment = parent_assignment;
-            const updatedExercise = await Exercise.findByIdAndUpdate(exerciseId, updateData, { new: true });
-            res.status(200).json(updatedExercise);
-            return;
-        }
         if (req.user.role === 'coach' && group.parent_coach.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'You do not have permission to update this exercise' });
         }
-        const { name, cf_code } = req.body;
+        const { name } = req.body;
         const updateData = {};
         if (name) updateData.name = name;
-        if (cf_code) updateData.cf_code = cf_code;
         const updatedExercise = await Exercise.findByIdAndUpdate(exerciseId, updateData, { new: true });
         res.status(200).json(updatedExercise);
     } catch (error) {
@@ -127,30 +117,6 @@ exports.deleteExercise = async (req, res) => {
         }
         await exercise.remove();
         res.status(200).json({ message: 'Exercise deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
-exports.getExercisesByAssignment = async (req, res) => {
-    try {
-        const parent_assignment = req.params.parent_assignment;
-        const assignment = await Assignment.findById(parent_assignment);
-        if (!assignment) {
-            return res.status(404).json({ message: 'Assignment not found' });
-        }
-        const group = await Group.findById(assignment.parent_group);
-        if (req.user.role === 'coach' && group.parent_coach.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ message: 'You do not have permission to view exercises for this assignment' });
-        }
-        if (req.user.role === 'student') {
-            const membership = await StudentGroup.findOne({ student_id: req.user._id, group_id: group._id });
-            if (!membership) {
-                return res.status(403).json({ message: 'You do not have permission to view exercises for this assignment' });
-            }
-        }
-        const exercises = await Exercise.find({ parent_assignment });
-        res.status(200).json(exercises);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

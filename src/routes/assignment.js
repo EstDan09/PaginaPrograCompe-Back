@@ -10,11 +10,60 @@ const student_ops = [authMiddleware.auth, studentMiddleware.auth];
 const normal_ops = [authMiddleware.auth];
 
 module.exports = (app) => {
+    /**
+     * Create assignment
+     * 
+     * Previous authentication: Admin/Coach
+     * 
+     * Body Input: { title: string, description: string, dueDate?: Date, parent_group: string }
+     * 
+     * Body Output: { _id: string, title: string, description: string, dueDate?: Date, parent_group: string }
+     */
     app.post("/assignment/create", coach_ops, AssignmentController.createAssignment);
-    app.get("/assignment/get", coach_ops, AssignmentController.getAssignments);
+
+    /**
+     * Get assignments by filters
+     * 
+     * Previous authentication: Basic
+     * 
+     * UrlQuery Input: id? [string], title? [string], description? [string], dueDate? [Date], parent_group? [string]
+     * 
+     * Body Output: { _id: string, title: string, description: string, dueDate?: Date, parent_group: string }[]
+     */
+    app.get("/assignment/get", normal_ops, AssignmentController.getAssignments);
+
+    /**
+     * Get assignment by id
+     * 
+     * Previous authentication: Basic
+     * 
+     * UrlParam Input: :id [string]
+     * 
+     * Body Output: { _id: string, title: string, description: string, dueDate?: Date, parent_group: string }
+     */
     app.get("/assignment/get/:id", normal_ops, AssignmentController.getAssignmentById);
+
+    /**
+     * Update assignment
+     * 
+     * Previous authentication: Admin/Coach
+     * 
+     * Body Input: { _id: string, title: string, description: string, dueDate?: Date }
+     * UrlParam Input: :id [string]
+     * 
+     * Body Output: { _id: string, title: string, description: string, dueDate?: Date, parent_group: string }
+     */
     app.put("/assignment/update/:id", coach_ops, AssignmentController.updateAssignment);
+
+    /**
+     * Delete assignment
+     * 
+     * Previous authentication: Admin/Coach
+     * 
+     * UrlParam Input: :id [string]
+     * 
+     * Body Output: N/A
+     */
     app.delete("/assignment/delete/:id", coach_ops, AssignmentController.deleteAssignment);
 
-    app.get("/assignment/get-by-group/:parent_group", normal_ops, AssignmentController.getAssignmentsByGroup);
 }

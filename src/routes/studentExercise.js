@@ -10,13 +10,58 @@ const student_ops = [authMiddleware.auth, studentMiddleware.auth];
 const normal_ops = [authMiddleware.auth];
 
 module.exports = (app) => {
+    /**
+     * Create studer exercise link as student
+     * 
+     * Previous authentication: Student
+     * 
+     * Body Input: { student_id: string, exercise_id: string }
+     * 
+     * Body Output: { _id: string, student_id: string, exercise_id: string }
+     */
     app.post("/student-exercise/create", student_ops, StudentExerciseController.createStudentExercise);
-    app.post("/student-exercise/create/:student_id", admin_ops, StudentExerciseController.createStudentExercise);
-    app.get("/student-exercise/get", admin_ops, StudentExerciseController.getStudentExercises);
-    app.get("/student-exercise/get/:id", admin_ops, StudentExerciseController.getStudentExerciseById);
-    app.delete("/student-exercise/delete/:id", admin_ops, StudentExerciseController.deleteStudentExercise);
 
-    app.get("/student-exercise/get-by-student", normal_ops, StudentExerciseController.getStudentExercisesByStudent);
-    app.get("/student-exercise/get-by-student/:student_id", coach_ops, StudentExerciseController.getStudentExercisesByStudent);
-    app.get("/student-exercise/get-by-exercise/:exercise_id", normal_ops, StudentExerciseController.getStudentExercisesByExercise);
+    /**
+     * Create student exercise link as admin
+     * 
+     * Previous authentication: Admin
+     * 
+     * Body Input: { student_id: string, exercise_id: string }
+     * 
+     * Body Output: { _id: string, student_id: string, exercise_id: string }
+     */
+    app.post("/student-exercise/create/:student_id", admin_ops, StudentExerciseController.createStudentExercise);
+
+    /**
+     * Get student exercise links by filters
+     * 
+     * Previous authentication: Basic
+     * 
+     * UrlQuery Input: id? [string], student_id? [string], exercise_id? [string]
+     * 
+     * Body Output: { _id: string, student_id: string, exercise_id: string }[]
+     */
+    app.get("/student-exercise/get", normal_ops, StudentExerciseController.getStudentExercises);
+
+    /**
+     * Get student exercise link by id
+     * 
+     * Previous authentication: Admin
+     * 
+     * UrlParam Input: :id [string]
+     * 
+     * Body Output: { _id: string, student_id: string, exercise_id: string }
+     */
+    app.get("/student-exercise/get/:id", admin_ops, StudentExerciseController.getStudentExerciseById);
+
+    /**
+     * Delete student exercise link
+     * 
+     * Previous authentication: Admin
+     * 
+     * UrlParam Input: :id [string]
+     * 
+     * Body Output: N/A
+     */
+    app.delete("/student-exercise/delete/:id", admin_ops, StudentExerciseController.deleteStudentExercise);
 }

@@ -13,7 +13,7 @@ exports.loginUser = async (req, res) => {
         if (!passwordMatch) {
             return res.status(400).json({ message: 'Invalid username or password' });
         }
-        const token = jwt.sign({ id: user._id, role: user.role }, process.env.SECRET_KEY, { expiresIn: '1h' });
+        const token = jwt.sign({ _id: user._id, role: user.role }, process.env.SECRET_KEY, { expiresIn: '1h' });
         res.status(200).json({ token });
 
     } catch (err) {
@@ -33,7 +33,7 @@ exports.registerUser = async (req, res) => {
             return res.status(400).json({ message: 'Username already exists' });
         }
         const newUser = await User.create({ username, password_hash: password, email, role });
-        const token = jwt.sign({ id: newUser._id, role: newUser.role }, process.env.SECRET_KEY, { expiresIn: '1h' });
+        const token = jwt.sign({ _id: newUser._id, role: newUser.role }, process.env.SECRET_KEY, { expiresIn: '1h' });
         res.status(201).json({ token });
     } catch (err) {
         console.error(err);
@@ -52,7 +52,7 @@ exports.refreshToken = async (req, res) => {
         if (!decoded) {
             return res.status(401).json({ message: 'Invalid token' });
         }
-        const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, process.env.SECRET_KEY, { expiresIn: '1h' });
+        const newToken = jwt.sign({ _id: decoded._id, role: decoded.role }, process.env.SECRET_KEY, { expiresIn: '1h' });
         res.status(200).json({ token: newToken });
     } catch (err) {
         console.error(err);
