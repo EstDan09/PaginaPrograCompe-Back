@@ -9,7 +9,7 @@ module.exports = (app) => {
      * 
      * Body Input: { username: string, password: string }
      * 
-     * Body Output: { token: jwt_token }
+     * Body Output: { token: string }
      */
     app.post("/auth/login", AuthController.loginUser);
 
@@ -18,9 +18,9 @@ module.exports = (app) => {
      * 
      * Previous authentication: N/A
      * 
-     * Body Input: { username: string, password: string, role: string, email?: string }
+     * Body Input: { username: string, password: string, role[student,coach]: string, email?: string }
      * 
-     * Body Output: { token: jwt_token }
+     * Body Output: { token: string }
      */
     app.post("/auth/register", AuthController.registerUser);
 
@@ -29,7 +29,7 @@ module.exports = (app) => {
      * 
      * Previous authentication: Basic
      * 
-     * Body Output: { token: jwt_token }
+     * Body Output: { token: string }
      */
     app.post("/auth/refresh-token", authMiddleware.auth, AuthController.refreshToken);
 }

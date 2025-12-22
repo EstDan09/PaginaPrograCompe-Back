@@ -26,7 +26,7 @@ module.exports = (app) => {
      * 
      * Previous authentication: Basic
      * 
-     * UrlQuery Input: id? [string], group_id? [string], student_id? [string]
+     * UrlQuery Input: group_id? [string], student_id? [string]
      * 
      * Body Output: { _id: string, group_id: string, student_id: string }[]
      */

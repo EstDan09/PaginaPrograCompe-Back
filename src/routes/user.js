@@ -22,7 +22,7 @@ module.exports = (app) => {
      * 
      * Previous authentication: Admin
      * 
-     * UrlQuery Input: id? [string], username? [string], password_hash? [string], role? [string], email? [string]
+     * UrlQuery Input: username? [string], password_hash? [string], role? [string], email? [string]
      * 
      * Body Output: { _id: string, username: string, password_hash: string, email?: string, role: string }[]
      */
@@ -78,7 +78,7 @@ module.exports = (app) => {
      * 
      * Previous authentication: Basic
      * 
-     * UrlQuery Input: id? [string], username? [string], role? [string], email? [string]
+     * UrlQuery Input: username? [string], role? [string], email? [string]
      * 
      * Body Output: { _id: string, username: string, role: string, email?: string }[]
      */

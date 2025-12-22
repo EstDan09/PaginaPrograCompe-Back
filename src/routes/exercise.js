@@ -26,7 +26,7 @@ module.exports = (app) => {
      * 
      * Previous authentication: Basic
      * 
-     * UrlQuery Input: id? [string], name? [string], cf_code? [string], parent_assignment? [string]
+     * UrlQuery Input: name? [string], cf_code? [string], parent_assignment? [string]
      * 
      * Body Output: { _id: string, name: string, cf_code: string, parent_assignment: string }[]
      */

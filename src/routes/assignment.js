@@ -26,7 +26,7 @@ module.exports = (app) => {
      * 
      * Previous authentication: Basic
      * 
-     * UrlQuery Input: id? [string], title? [string], description? [string], due_date? [Date], parent_group? [string]
+     * UrlQuery Input: title? [string], description? [string], due_date? [Date], parent_group? [string]
      * 
      * Body Output: { _id: string, title: string, description: string, due_date?: Date, parent_group: string }[]
      */
@@ -48,7 +48,7 @@ module.exports = (app) => {
      * 
      * Previous authentication: Admin/Coach
      * 
-     * Body Input: { _id: string, title: string, description: string, due_date?: Date }
+     * Body Input: { title: string, description: string, due_date?: Date }
      * UrlParam Input: :id [string]
      * 
      * Body Output: { _id: string, title: string, description: string, due_date?: Date, parent_group: string }

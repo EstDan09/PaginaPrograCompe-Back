@@ -26,7 +26,7 @@ module.exports = (app) => {
      * 
      * Previous authentication: Admin/Coach
      * 
-     * UrlQuery Input: id? [string], name? [string], description? [string], parent_coach? [string]
+     * UrlQuery Input: name? [string], description? [string], parent_coach? [string]
      * 
      * Body Output: { _id: string, name: string, description: string, parent_coach: string }[]
      */
