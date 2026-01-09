@@ -155,7 +155,7 @@ const populateDatabase = async() => {
         const student3Res = await request(app)
             .post('/admin/create')
             .set('Authorization', `Bearer ${adminToken}`)
-            .send({ username: 'student3', password: 'pass', email: 'student3@test.com', role: 'student' });
+            .send({ username: 'student3', password: 'pass', email: 'student3@test.com', role: 'student', cf_account: 'fisher199' });
         const student3 = student3Res.body;
 
         for (let i = 0; i < 3; i++) {
