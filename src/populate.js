@@ -26,6 +26,10 @@ const seedDatabase = async () => {
 
 const createAndLoginUser = async ({ username, password, role, email }) => {
     const user = await User.create({ username, password_hash: password, email: email || `${username}@test.com`, role });
+    if (!role || role === 'student') {
+        const CFAccount = require('./models/CFAccount');
+        await CFAccount.create({ student_id: user._id, cf_account: 'fisher199' });
+    }
     const res = await request(app)
         .post('/auth/login')
         .send({ username, password });
@@ -65,7 +69,7 @@ const populateDatabase = async() => {
             const res = await request(app)
                 .post('/admin/create')
                 .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username: `student${i}`, password: 'pass', email: `student${i}@test.com`, role: 'student' });
+                .send({ username: `student${i}`, password: 'pass', email: `student${i}@test.com`, role: 'student', cf_account: 'fisher199' });
             if (res.status !== 201) {
                 throw new Error('Failed to create user: ' + res.text);
             }
@@ -136,7 +140,6 @@ const populateDatabase = async() => {
             }
         }
 
-        // Create challenges
         const challenges = [];
         for (let i = 0; i < 5; i++) {
             const res = await request(app)
@@ -149,7 +152,6 @@ const populateDatabase = async() => {
             challenges.push(res.body.challenge);
         }
 
-        // Create additional challenges for different students
         const student3Res = await request(app)
             .post('/admin/create')
             .set('Authorization', `Bearer ${adminToken}`)
@@ -167,7 +169,6 @@ const populateDatabase = async() => {
             challenges.push(res.body.challenge);
         }
 
-        // Verify some challenges
         for (let i = 0; i < 2; i++) {
             const res = await request(app)
                 .put(`/challenge/verify/${challenges[i]._id}`)
