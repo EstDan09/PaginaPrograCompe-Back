@@ -43,6 +43,12 @@ const populateDatabase = async() => {
         const adminToken = adminRes.body.token;
         const admin = await User.findOne({ username: 'admin' });
 
+        ({ user: student2, token: studentToken2 } = await createAndLoginUser({
+            username: "studentx",
+            password: "studentpass",
+            role: "student"
+        }));
+
         ({ user: student, token: studentToken } = await createAndLoginUser({
             username: "student",
             password: "studentpass",
@@ -127,6 +133,57 @@ const populateDatabase = async() => {
                 .send({ exercise_id: exercise._id });
             if (res.status !== 201) {
                 throw new Error('Failed to create student-exercise: ' + res.text);
+            }
+        }
+
+        // Create challenges
+        const challenges = [];
+        for (let i = 0; i < 5; i++) {
+            const res = await request(app)
+                .post('/challenge/create')
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({ cf_code: exercises[i].cf_code });
+            if (res.status !== 201) {
+                throw new Error('Failed to create challenge: ' + res.text);
+            }
+            challenges.push(res.body.challenge);
+        }
+
+        // Create additional challenges for different students
+        const student3Res = await request(app)
+            .post('/admin/create')
+            .set('Authorization', `Bearer ${adminToken}`)
+            .send({ username: 'student3', password: 'pass', email: 'student3@test.com', role: 'student' });
+        const student3 = student3Res.body;
+
+        for (let i = 0; i < 3; i++) {
+            const res = await request(app)
+                .post(`/challenge/create/${student3._id}`)
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ cf_code: exercises[i].cf_code });
+            if (res.status !== 201) {
+                throw new Error('Failed to create challenge: ' + res.text);
+            }
+            challenges.push(res.body.challenge);
+        }
+
+        // Verify some challenges
+        for (let i = 0; i < 2; i++) {
+            const res = await request(app)
+                .put(`/challenge/verify/${challenges[i]._id}`)
+                .set('Authorization', `Bearer ${studentToken}`);
+            if (res.status !== 200) {
+                throw new Error('Failed to verify challenge: ' + res.text);
+            }
+        }
+
+        {
+            const res = await request(app)
+                .post('/following/create')
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({ student_2_id: student2._id });
+            if (res.status !== 201) {
+                throw new Error('Failed to create following: ' + res.text);
             }
         }
 

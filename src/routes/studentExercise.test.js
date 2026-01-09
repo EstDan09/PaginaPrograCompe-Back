@@ -141,6 +141,7 @@ describe('StudentExercise API', () => {
             expect(res.body).toHaveProperty('studentExercise');
             expect(res.body.studentExercise.student_id).toBe(testUsers.student._id.toString());
             expect(res.body.studentExercise.exercise_id).toBe(testExercises.coachExercise._id.toString());
+            expect(res.body.studentExercise.completion_type).toBe('normal');
             testStudentExercises.studentExercise = res.body.studentExercise;
         });
 
@@ -164,6 +165,7 @@ describe('StudentExercise API', () => {
             expect(res.body).toHaveProperty('studentExercise');
             expect(res.body.studentExercise.student_id).toBe(testUsers.student2._id.toString());
             expect(res.body.studentExercise.exercise_id).toBe(testExercises.coach2Exercise._id.toString());
+            expect(res.body.studentExercise.completion_type).toBe('normal');
             testStudentExercises.adminCreated = res.body.studentExercise;
         });
 

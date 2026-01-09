@@ -9,13 +9,13 @@ const normal_ops = [authMiddleware.auth];
 
 module.exports = (app) => {
     /**
-     * Create studer exercise link as student
+     * Create student exercise link as student
      * 
      * Previous authentication: Student
      * 
      * Body Input: { exercise_id: string }
      * 
-     * Body Output: { _id: string, student_id: string, exercise_id: string }
+     * Body Output: { _id: string, student_id: string, exercise_id: string, completion_type: string }
      */
     app.post("/student-exercise/create", fstudent_ops, StudentExerciseController.createStudentExercise);
 
@@ -26,7 +26,7 @@ module.exports = (app) => {
      * 
      * Body Input: { student_id: string, exercise_id: string }
      * 
-     * Body Output: { _id: string, student_id: string, exercise_id: string }
+     * Body Output: { _id: string, student_id: string, exercise_id: string, completion_type: string }
      */
     app.post("/student-exercise/create/:student_id", admin_ops, StudentExerciseController.createStudentExercise);
 
@@ -39,7 +39,7 @@ module.exports = (app) => {
      * # Notice that at most one of exercise_id, assignment_id, and group_id, can be used.
      * # Also, filtering by group_id looks for the parent recursively
      * 
-     * Body Output: { _id: string, student_id: string, exercise_id: string }[]
+     * Body Output: { _id: string, student_id: string, exercise_id: string, completion_type: string }[]
      */
     app.get("/student-exercise/get", normal_ops, StudentExerciseController.getStudentExercises);
 
@@ -50,7 +50,7 @@ module.exports = (app) => {
      * 
      * UrlParam Input: :id [string]
      * 
-     * Body Output: { _id: string, student_id: string, exercise_id: string }
+     * Body Output: { _id: string, student_id: string, exercise_id: string, completion_type: string }
      */
     app.get("/student-exercise/get/:id", admin_ops, StudentExerciseController.getStudentExerciseById);
 
