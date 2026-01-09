@@ -48,7 +48,7 @@ exports.createStudentExercise = async (req, res) => {
 
 exports.getStudentExercises = async (req, res) => {
     try {
-        const {group_id, assignment_id, exercise_id, student_id} = req.query;
+        const {group_id, assignment_id, exercise_id, student_id, completion_type} = req.query;
         if ((group_id ? 1 : 0) + (assignment_id ? 1 : 0) + (exercise_id ? 1 : 0) > 1) {
             return res.status(400).json({ message: 'Query at most one of group_id, assignment_id, or exercise_id' });
         }
@@ -67,6 +67,7 @@ exports.getStudentExercises = async (req, res) => {
             const exerciseIds = exercises.map(e => e._id);
             filter.exercise_id = { $in: exerciseIds };
         }
+        if (completion_type) filter.completion_type = completion_type;
         if (req.user.role === 'student') {
             if (student_id) {
                 return res.status(403).json({ message: 'Access denied' });

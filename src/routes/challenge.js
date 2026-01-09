@@ -15,9 +15,9 @@ module.exports = (app) => {
      * 
      * Previous authentication: Student
      * 
-     * Body Input: { exercise_id: string }
+     * Body Input: { cf_code: string }
      * 
-     * Body Output: { _id: string, student_id: string, exercise_id: string }
+     * Body Output: { _id: string, student_id: string, cf_code: string, is_completed_flag: bool }
      */
     app.post("/challenge/create", fstudent_ops, ChallengeController.createChallenge);
 
@@ -26,9 +26,10 @@ module.exports = (app) => {
      * 
      * Previous authentication: Admin
      * 
-     * Body Input: { student_id: string, exercise_id: string }
+     * Body Input: { cf_code: string }
+     * UrlParam Input: :student_id [string]
      * 
-     * Body Output: { _id: string, student_id: string, exercise_id: string }
+     * Body Output: { _id: string, student_id: string, cf_code: string, is_completed_flag: bool }
      */
     app.post("/challenge/create/:student_id", admin_ops, ChallengeController.createChallenge);
 
@@ -37,11 +38,9 @@ module.exports = (app) => {
      * 
      * Previous authentication: Admin/Student
      * 
-     * UrlQuery Input: student_id? [string], exercise_id? [string], assignment_id? [string], group_id? [string]
-     * # Notice that at most one of exercise_id, assignment_id, and group_id, can be used.
-     * # Also, filtering by group_id looks for the parent recursively
+     * UrlQuery Input: student_id? [string], cf_code? [string], is_completed_flag? [string], completion_type? [string]
      * 
-     * Body Output: { _id: string, student_id: string, exercise_id: string }[]
+     * Body Output: { _id: string, student_id: string, cf_code: string, is_completed_flag: bool, completion_type?: string }[]
      */
     app.get("/challenge/get", student_ops, ChallengeController.getChallenges);
 
@@ -52,7 +51,7 @@ module.exports = (app) => {
      * 
      * UrlParam Input: :id [string]
      * 
-     * Body Output: { _id: string, student_id: string, exercise_id: string }
+     * Body Output: { _id: string, student_id: string, cf_code: string, is_completed_flag: bool, completion_type?: string }
      */
     app.get("/challenge/get/:id", admin_ops, ChallengeController.getChallengeById);
 
@@ -74,7 +73,7 @@ module.exports = (app) => {
      * 
      * UrlParam Input: :id [string]
      * 
-     * Body Output: N/A
+     * Body Output: { _id: string, student_id: string, cf_code: string, is_completed_flag: bool, completion_type?: string }
      */
     app.put("/challenge/verify/:id", student_ops, ChallengeController.verifyChallenge);
 
