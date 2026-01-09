@@ -42,7 +42,7 @@ exports.getFollowing = async (req, res) => {
         if (student_1_id) filter.student_1_id = student_1_id;
         if (student_2_id) filter.student_2_id = student_2_id;
         if (req.user.role === 'student') {
-            if (student_1_id && student_1_id !== req.user._id) {
+            if (student_1_id) {
                 return res.status(403).json({ message: 'Access denied' });
             }
             filter.student_1_id = req.user._id;

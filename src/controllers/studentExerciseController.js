@@ -8,6 +8,8 @@ const StudentGroup = require("../models/StudentGroup");
 exports.createStudentExercise = async (req, res) => {
     try {
         // TODO : Validate exercise completion with codeforces
+        // TODO : Determine completion type with codeforces
+        const completion_type = "normal";
         const student_id = req.params.student_id ? req.params.student_id : req.user._id;
         if (req.params.student_id) {
             if (!student_id || !require('mongoose').Types.ObjectId.isValid(student_id)) {
@@ -35,7 +37,8 @@ exports.createStudentExercise = async (req, res) => {
         }
         const studentExercise = await StudentExercise.create({
             student_id,
-            exercise_id
+            exercise_id,
+            completion_type
         });
         res.status(201).json({ message: 'Student exercise created successfully', studentExercise });
     } catch (error) {
