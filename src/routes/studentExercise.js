@@ -1,12 +1,10 @@
 const StudentExerciseController = require("../controllers/studentExerciseController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const adminMiddleware = require("../middlewares/adminMiddleware");
-const coachMiddleware = require("../middlewares/coachMiddleware");
-const studentMiddleware = require("../middlewares/studentMiddleware");
+const fstudentMiddleware = require("../middlewares/fstudentMiddleware");
 
 const admin_ops = [authMiddleware.auth, adminMiddleware.auth];
-const coach_ops = [authMiddleware.auth, coachMiddleware.auth];
-const student_ops = [authMiddleware.auth, studentMiddleware.auth];
+const fstudent_ops = [authMiddleware.auth, fstudentMiddleware.auth];
 const normal_ops = [authMiddleware.auth];
 
 module.exports = (app) => {
@@ -19,7 +17,7 @@ module.exports = (app) => {
      * 
      * Body Output: { _id: string, student_id: string, exercise_id: string }
      */
-    app.post("/student-exercise/create", student_ops, StudentExerciseController.createStudentExercise);
+    app.post("/student-exercise/create", fstudent_ops, StudentExerciseController.createStudentExercise);
 
     /**
      * Create student exercise link as admin

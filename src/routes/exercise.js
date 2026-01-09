@@ -1,12 +1,8 @@
 const ExerciseController = require("../controllers/exerciseController");
 const authMiddleware = require("../middlewares/authMiddleware");
-const adminMiddleware = require("../middlewares/adminMiddleware");
 const coachMiddleware = require("../middlewares/coachMiddleware");
-const studentMiddleware = require("../middlewares/studentMiddleware");
 
-const admin_ops = [authMiddleware.auth, adminMiddleware.auth];
 const coach_ops = [authMiddleware.auth, coachMiddleware.auth];
-const student_ops = [authMiddleware.auth, studentMiddleware.auth];
 const normal_ops = [authMiddleware.auth];
 
 module.exports = (app) => {
