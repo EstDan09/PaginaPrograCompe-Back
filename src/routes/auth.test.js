@@ -39,7 +39,8 @@ describe("Auth API", () => {
                     username: "testuser",
                     password: "password123",
                     email: "test@test.com",
-                    role: "student"
+                    role: "student",
+                    cf_account: "fisher199"
                 });
 
             expect(res.statusCode).toBe(201);

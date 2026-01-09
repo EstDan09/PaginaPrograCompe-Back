@@ -1,12 +1,19 @@
 const User = require('../models/User');
+const CFAccount = require('../models/CFAccount');
 
 exports.createUser = async (req, res) => {
     try {
-        const { username, password, email, role } = req.body;
+        const { username, password, email, role, cf_account } = req.body;
         if (role && !['student', 'coach', 'admin'].includes(role)) {
             return res.status(400).json({ message: 'Invalid role' });
         }
+        if ((!role || role === 'student') && !cf_account) {
+            return res.status(400).json({ message: 'Students must have associated Codeforces account' });
+        }
         const newUser = await User.create({ username, password_hash: password, email, role });
+        if (!role || role === 'student') {
+            await CFAccount.create({student_id: newUser._id, cf_account});
+        }
         res.status(201).json(newUser);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });

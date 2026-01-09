@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
+const CFAccount = require('../models/CFAccount');
 
 exports.loginUser = async (req, res) => {
     try {
@@ -24,15 +25,21 @@ exports.loginUser = async (req, res) => {
 
 exports.registerUser = async (req, res) => {
     try {
-        const { username, password, email, role } = req.body;
+        const { username, password, email, role, cf_account } = req.body;
         if (role && !['student', 'coach'].includes(role)) {
             return res.status(400).json({ message: 'Invalid role' });
+        }
+        if ((!role || role === 'student') && !cf_account) {
+            return res.status(400).json({ message: 'Must specify associated Codeforces account for student' });
         }
         const existingUser = await User.findOne({ username });
         if (existingUser) {
             return res.status(400).json({ message: 'Username already exists' });
         }
         const newUser = await User.create({ username, password_hash: password, email, role });
+        if (!role || role === 'student') {
+            await CFAccount.create({student_id: newUser._id, cf_account});
+        }
         const token = jwt.sign({ _id: newUser._id, role: newUser.role }, process.env.SECRET_KEY, { expiresIn: '1h' });
         res.status(201).json({ token });
     } catch (err) {

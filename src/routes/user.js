@@ -11,7 +11,7 @@ module.exports = (app) => {
      * 
      * Previous authentication: Admin
      * 
-     * Body Input: {username: string, password: string, email?: string, role?: string}
+     * Body Input: {username: string, password: string, email?: string, role?: string, cf_account?[if and only if role is student]: string}
      * 
      * Body Output: { _id: string, username: string, password_hash: string, email?: string, role: string }
      */
