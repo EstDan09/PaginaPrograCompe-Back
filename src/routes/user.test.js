@@ -11,6 +11,10 @@ describe("User API", () => {
 
     const createAndLoginUser = async ({ username, password, role }) => {
         const user = await User.create({ username, password_hash: password, email: `${username}@test.com`, role });
+        if (!role || role === 'student') {
+            const CFAccount = require('../models/CFAccount');
+            await CFAccount.create({ student_id: user._id, cf_account: 'fisher199' });
+        }
         const res = await request(app)
             .post("/auth/login")
             .send({ username, password });
@@ -49,7 +53,7 @@ describe("User API", () => {
             const res = await request(app)
                 .post("/admin/create")
                 .set("Authorization", `Bearer ${adminToken}`)
-                .send({ username: "newuser", password: "pass123", email: "newuser@test.com", role: "student" });
+                .send({ username: "newuser", password: "pass123", email: "newuser@test.com", role: "student", cf_account: "fisher199" });
 
             expect(res.statusCode).toBe(201);
             expect(res.body).toHaveProperty("_id");
@@ -88,6 +92,8 @@ describe("User API", () => {
 
         it("admin can delete a user", async () => {
             const user = await User.create({ username: "todelete", password_hash: "pass", email: "del@test.com", role: "student" });
+            const CFAccount = require('../models/CFAccount');
+            await CFAccount.create({ student_id: user._id, cf_account: 'fisher199' });
             const res = await request(app)
                 .delete(`/admin/delete/${user._id}`)
                 .set("Authorization", `Bearer ${adminToken}`);

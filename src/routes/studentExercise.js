@@ -1,34 +1,33 @@
 const StudentExerciseController = require("../controllers/studentExerciseController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const adminMiddleware = require("../middlewares/adminMiddleware");
-const coachMiddleware = require("../middlewares/coachMiddleware");
-const studentMiddleware = require("../middlewares/studentMiddleware");
+const fstudentMiddleware = require("../middlewares/fstudentMiddleware");
 
 const admin_ops = [authMiddleware.auth, adminMiddleware.auth];
-const coach_ops = [authMiddleware.auth, coachMiddleware.auth];
-const student_ops = [authMiddleware.auth, studentMiddleware.auth];
+const fstudent_ops = [authMiddleware.auth, fstudentMiddleware.auth];
 const normal_ops = [authMiddleware.auth];
 
 module.exports = (app) => {
     /**
-     * Create studer exercise link as student
+     * Create student exercise link as student
      * 
      * Previous authentication: Student
      * 
      * Body Input: { exercise_id: string }
      * 
-     * Body Output: { _id: string, student_id: string, exercise_id: string }
+     * Body Output: { _id: string, student_id: string, exercise_id: string, completion_type: string }
      */
-    app.post("/student-exercise/create", student_ops, StudentExerciseController.createStudentExercise);
+    app.post("/student-exercise/create", fstudent_ops, StudentExerciseController.createStudentExercise);
 
     /**
      * Create student exercise link as admin
      * 
      * Previous authentication: Admin
      * 
-     * Body Input: { student_id: string, exercise_id: string }
+     * Body Input: { exercise_id: string }
+     * UrlParam Input: :student_id [string]
      * 
-     * Body Output: { _id: string, student_id: string, exercise_id: string }
+     * Body Output: { _id: string, student_id: string, exercise_id: string, completion_type: string }
      */
     app.post("/student-exercise/create/:student_id", admin_ops, StudentExerciseController.createStudentExercise);
 
@@ -37,11 +36,11 @@ module.exports = (app) => {
      * 
      * Previous authentication: Basic
      * 
-     * UrlQuery Input: student_id? [string], exercise_id? [string], assignment_id? [string], group_id? [string]
+     * UrlQuery Input: student_id? [string], exercise_id? [string], assignment_id? [string], group_id? [string], completion_type? [string]
      * # Notice that at most one of exercise_id, assignment_id, and group_id, can be used.
      * # Also, filtering by group_id looks for the parent recursively
      * 
-     * Body Output: { _id: string, student_id: string, exercise_id: string }[]
+     * Body Output: { _id: string, student_id: string, exercise_id: string, completion_type: string }[]
      */
     app.get("/student-exercise/get", normal_ops, StudentExerciseController.getStudentExercises);
 
@@ -52,7 +51,7 @@ module.exports = (app) => {
      * 
      * UrlParam Input: :id [string]
      * 
-     * Body Output: { _id: string, student_id: string, exercise_id: string }
+     * Body Output: { _id: string, student_id: string, exercise_id: string, completion_type: string }
      */
     app.get("/student-exercise/get/:id", admin_ops, StudentExerciseController.getStudentExerciseById);
 

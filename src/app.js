@@ -156,6 +156,9 @@ require("./routes/assignment.js")(app);
 require("./routes/exercise.js")(app);
 require("./routes/studentGroup.js")(app);
 require("./routes/studentExercise.js")(app);
+require("./routes/following.js")(app);
+require("./routes/challenge.js")(app);
+require("./routes/cfAccount.js")(app);
 
 
 /**

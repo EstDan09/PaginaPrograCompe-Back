@@ -18,7 +18,7 @@ module.exports = (app) => {
      * 
      * Previous authentication: N/A
      * 
-     * Body Input: { username: string, password: string, role[student,coach]: string, email?: string }
+     * Body Input: { username: string, password: string, role[student,coach]: string, email?: string, cf_account?[if and only if role is student]: string }
      * 
      * Body Output: { token: string }
      */

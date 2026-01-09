@@ -8,6 +8,8 @@ const StudentGroup = require("../models/StudentGroup");
 exports.createStudentExercise = async (req, res) => {
     try {
         // TODO : Validate exercise completion with codeforces
+        // TODO : Determine completion type with codeforces
+        const completion_type = "normal";
         const student_id = req.params.student_id ? req.params.student_id : req.user._id;
         if (req.params.student_id) {
             if (!student_id || !require('mongoose').Types.ObjectId.isValid(student_id)) {
@@ -35,7 +37,8 @@ exports.createStudentExercise = async (req, res) => {
         }
         const studentExercise = await StudentExercise.create({
             student_id,
-            exercise_id
+            exercise_id,
+            completion_type
         });
         res.status(201).json({ message: 'Student exercise created successfully', studentExercise });
     } catch (error) {
@@ -45,7 +48,7 @@ exports.createStudentExercise = async (req, res) => {
 
 exports.getStudentExercises = async (req, res) => {
     try {
-        const {group_id, assignment_id, exercise_id, student_id} = req.query;
+        const {group_id, assignment_id, exercise_id, student_id, completion_type} = req.query;
         if ((group_id ? 1 : 0) + (assignment_id ? 1 : 0) + (exercise_id ? 1 : 0) > 1) {
             return res.status(400).json({ message: 'Query at most one of group_id, assignment_id, or exercise_id' });
         }
@@ -64,6 +67,7 @@ exports.getStudentExercises = async (req, res) => {
             const exerciseIds = exercises.map(e => e._id);
             filter.exercise_id = { $in: exerciseIds };
         }
+        if (completion_type) filter.completion_type = completion_type;
         if (req.user.role === 'student') {
             if (student_id) {
                 return res.status(403).json({ message: 'Access denied' });
