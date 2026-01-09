@@ -4,6 +4,9 @@ const connectDB = require("./config/db.js");
 const User = require("./models/User.js");
 
 dotenv.config();
+if (!process.env.SECRET_KEY) {
+  throw new Error("SECRET_KEY is missing in .env");
+}
 
 const seedDatabase = async () => {
   try {
