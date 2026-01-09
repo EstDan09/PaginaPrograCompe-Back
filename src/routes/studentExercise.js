@@ -24,7 +24,8 @@ module.exports = (app) => {
      * 
      * Previous authentication: Admin
      * 
-     * Body Input: { student_id: string, exercise_id: string }
+     * Body Input: { exercise_id: string }
+     * UrlParam Input: :student_id [string]
      * 
      * Body Output: { _id: string, student_id: string, exercise_id: string, completion_type: string }
      */
@@ -35,7 +36,7 @@ module.exports = (app) => {
      * 
      * Previous authentication: Basic
      * 
-     * UrlQuery Input: student_id? [string], exercise_id? [string], assignment_id? [string], group_id? [string]
+     * UrlQuery Input: student_id? [string], exercise_id? [string], assignment_id? [string], group_id? [string], completion_type? [string]
      * # Notice that at most one of exercise_id, assignment_id, and group_id, can be used.
      * # Also, filtering by group_id looks for the parent recursively
      * 
