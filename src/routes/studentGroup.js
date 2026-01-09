@@ -2,11 +2,9 @@ const StudentGroupController = require("../controllers/studentGroupController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const adminMiddleware = require("../middlewares/adminMiddleware");
 const coachMiddleware = require("../middlewares/coachMiddleware");
-const studentMiddleware = require("../middlewares/studentMiddleware");
 
 const admin_ops = [authMiddleware.auth, adminMiddleware.auth];
 const coach_ops = [authMiddleware.auth, coachMiddleware.auth];
-const student_ops = [authMiddleware.auth, studentMiddleware.auth];
 const normal_ops = [authMiddleware.auth];
 
 module.exports = (app) => {
@@ -33,7 +31,7 @@ module.exports = (app) => {
     app.get("/student-group/get", normal_ops, StudentGroupController.getStudentGroups);
 
     /**
-     * Get strung group links by id
+     * Get student group links by id
      * 
      * Previous authentication: Admin
      * 
