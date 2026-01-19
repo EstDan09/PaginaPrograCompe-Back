@@ -105,13 +105,14 @@ const populateDatabase = async() => {
         }
 
         const exercises = [];
+        const cfCodes = ['4A', '4B', '25A', '25B', '25C'];
         for (let i = 0; i < 5; i++) {
             const res = await request(app)
                 .post('/exercise/create')
                 .set('Authorization', `Bearer ${coachToken}`)
                 .send({
                     name: `Exercise ${i + 1}`,
-                    cf_code: `123${i}A`,
+                    cf_code: cfCodes[i],
                     parent_assignment: assignments[i]._id
                 });
             if (res.status !== 201) {
@@ -132,8 +133,8 @@ const populateDatabase = async() => {
 
         for (let exercise of exercises) {
             const res = await request(app)
-                .post('/student-exercise/create')
-                .set('Authorization', `Bearer ${studentToken}`)
+                .post(`/student-exercise/create/${student._id}`)
+                .set('Authorization', `Bearer ${adminToken}`)
                 .send({ exercise_id: exercise._id });
             if (res.status !== 201) {
                 throw new Error('Failed to create student-exercise: ' + res.text);
@@ -169,6 +170,7 @@ const populateDatabase = async() => {
             challenges.push(res.body.challenge);
         }
 
+        /*
         for (let i = 0; i < 2; i++) {
             const res = await request(app)
                 .put(`/challenge/verify/${challenges[i]._id}`)
@@ -177,6 +179,7 @@ const populateDatabase = async() => {
                 throw new Error('Failed to verify challenge: ' + res.text);
             }
         }
+            */
 
         {
             const res = await request(app)

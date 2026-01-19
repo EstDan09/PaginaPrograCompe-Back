@@ -2,6 +2,7 @@ const request = require("supertest");
 const mongoose = require("mongoose");
 const app = require("../app");
 const User = require("../models/User");
+const CFAccount = require("../models/CFAccount");
 const Challenge = require("../models/Challenge");
 const Exercise = require("../models/Exercise");
 const Assignment = require("../models/Assignment");
@@ -19,6 +20,12 @@ describe("Challenge API", () => {
 
     const createAndLoginUser = async ({ username, password, role }) => {
         const user = await User.create({ username, password_hash: password, email: `${username}@test.com`, role });
+        
+        // Create CFAccount for students so they have cf_handle in JWT
+        if (role === "student") {
+            await CFAccount.create({ student_id: user._id, cf_account: `${username}_cf`, is_verified_flag: true });
+        }
+        
         const res = await request(app)
             .post("/auth/login")
             .send({ username, password });

@@ -16,7 +16,7 @@ describe("CFAccount API", () => {
     const createAndLoginUser = async ({ username, password, role }) => {
         const user = await User.create({ username, password_hash: password, email: `${username}@test.com`, role });
         if (!role || role === 'student') {
-            const cfAccount = await CFAccount.create({ student_id: user._id, cf_account: 'fisher199' });
+            const cfAccount = await CFAccount.create({ student_id: user._id, cf_account: `${username}_cf`, is_verified_flag: true });
             testCFAccounts[username] = cfAccount;
         }
         const res = await request(app)
@@ -61,7 +61,7 @@ describe("CFAccount API", () => {
                 .set("Authorization", `Bearer ${studentToken}`);
 
             expect(res.statusCode).toBe(200);
-            expect(res.body.cf_account).toBe("fisher199");
+            expect(res.body.cf_account).toBe("student_cf");
             expect(res.body.student_id).toBe(testUsers.student._id.toString());
         });
 
@@ -102,7 +102,7 @@ describe("CFAccount API", () => {
                 .set("Authorization", `Bearer ${adminToken}`);
 
             expect(res.statusCode).toBe(200);
-            expect(res.body.cf_account).toBe("fisher199");
+            expect(res.body.cf_account).toBe("student_cf");
         });
 
         it("student cannot get cf account by id", async () => {
