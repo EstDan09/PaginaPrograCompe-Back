@@ -20,7 +20,7 @@
 
 const { CodeforcesAPI } = require("codeforces-api-ts");
 
-// In test mode, don't make actual API calls
+// In test mode, don't make actual API calls (only when NODE_ENV=test, not integration)
 const IS_TEST_MODE = process.env.NODE_ENV === "test";
 
 /**
@@ -47,18 +47,26 @@ async function verifyProblemSolved(cfHandle, cfCode) {
     const { contestId, problemIndex } = extractContestAndProblem(cfCode);
 
     // Get contest details first to know duration
-    const contestStandings = await CodeforcesAPI.call("contest.standings", {
+    const {status: contestStatus, result: contestStandings} = await CodeforcesAPI.call("contest.standings", {
       contestId: contestId
     });
+
+    if (contestStatus !== "OK") {
+      throw new Error("Failed to fetch contest standings");
+    }
 
     const contest = contestStandings.contest;
 
     // Get last 1000 submissions for performance
-    const submissions = await CodeforcesAPI.call("user.status", {
+    const {status, result: submissions} = await CodeforcesAPI.call("user.status", {
       handle: cfHandle,
       from: 1,
       count: 1000
     });
+
+    if (status !== "OK") {
+      throw new Error("Failed to fetch user submissions");
+    }
 
     // Find first successful submission for this problem
     const successfulSubmission = submissions.find(sub =>
@@ -103,12 +111,15 @@ async function verifyProblemCompilationErrorRecent(cfHandle, cfCode) {
   try {
     const { contestId, problemIndex } = extractContestAndProblem(cfCode);
 
-    // Get last 1000 submissions for performance
-    const submissions = await CodeforcesAPI.call("user.status", {
+    // Get last 10 submissions for performance
+    const {status, result: submissions} = await CodeforcesAPI.call("user.status", {
       handle: cfHandle,
       from: 1,
       count: 10
     });
+    if (status !== "OK") {
+      throw new Error("Failed to fetch user submissions");
+    }
 
     const compilationErrorSubmission = submissions.find(sub =>
       sub.contestId === contestId &&
@@ -144,9 +155,10 @@ async function validateCfCode(cfCode) {
   try {
     const { contestId, problemIndex } = extractContestAndProblem(cfCode);
 
-    const standings = await CodeforcesAPI.call("contest.standings", {
+    const {status, result: standings} = await CodeforcesAPI.call("contest.standings", {
       contestId: contestId
     });
+    if (status !== "OK") throw new Error("Failed to fetch contest standings");
 
     const problems = standings.problems || [];
     const problemExists = problems.some(p => p.index === problemIndex);
@@ -183,9 +195,10 @@ async function getProblemInfo(cfCode) {
   try {
     const { contestId, problemIndex } = extractContestAndProblem(cfCode);
 
-    const standings = await CodeforcesAPI.call("contest.standings", {
+    const {status, result: standings} = await CodeforcesAPI.call("contest.standings", {
       contestId: contestId
     });
+    if (status !== "OK") throw new Error("Failed to fetch contest standings");
 
     const problems = standings.problems || [];
 
@@ -230,9 +243,12 @@ async function getUserInfo(cfHandle) {
   }
 
   try {
-    const users = await CodeforcesAPI.call("user.info", {
+    const {status, result: users} = await CodeforcesAPI.call("user.info", {
       handles: cfHandle
     });
+    if (status !== "OK") {
+      throw new Error("Failed to fetch user info");
+    }
 
     return users[0] || null;
   } catch (error) {
@@ -252,9 +268,12 @@ async function verifyExistingCodeforcesAccount(cfHandle) {
   }
 
   try {
-    const users = await CodeforcesAPI.call("user.info", {
+    const {status, result: users} = await CodeforcesAPI.call("user.info", {
       handles: cfHandle
     });
+    if (status !== "OK") {
+      throw new Error("Failed to fetch user info");
+    }
 
     return users.length > 0;
   } catch (error) {
@@ -278,7 +297,10 @@ async function getRandomValidProblem() {
   }
 
   try {
-    const problems = await CodeforcesAPI.call("problemset.problems", {});
+    const {status, result: problems} = await CodeforcesAPI.call("problemset.problems", {});
+    if (status !== "OK") {
+      throw new Error("Failed to fetch problems from Codeforces");
+    }
     const problemsList = problems.problems || [];
 
     if (problemsList.length === 0) {
@@ -327,11 +349,15 @@ async function getUserSubmissions(cfHandle, from = 1, count = 50) {
   }
 
   try {
-    return await CodeforcesAPI.call("user.status", {
+    const {status, result: submissions} = await CodeforcesAPI.call("user.status", {
       handle: cfHandle,
       from: from,
       count: count
     });
+    if (status !== "OK") {
+      throw new Error("Failed to fetch user submissions");
+    }
+    return submissions;
   } catch (error) {
     throw new Error(`Failed to get user submissions: ${error.message}`);
   }

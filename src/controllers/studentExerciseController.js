@@ -4,12 +4,15 @@ const User = require("../models/User");
 const Assignment = require("../models/Assignment");
 const Group = require("../models/Group");
 const StudentGroup = require("../models/StudentGroup");
+const CFAccount = require("../models/CFAccount");
 const CodeforcesService = require("../services/codeforces");
 
 exports.createStudentExercise = async (req, res) => {
     try {
-        const student_id = req.params.student_id ? req.params.student_id : req.user._id;
+        let student_id = req.user._id;
+        let cf_handle = req.user.cf_handle;
         if (req.params.student_id) {
+            student_id = req.params.student_id;
             if (!student_id || !require('mongoose').Types.ObjectId.isValid(student_id)) {
                 return res.status(400).json({ message: 'Invalid student_id' });
             }
@@ -17,6 +20,9 @@ exports.createStudentExercise = async (req, res) => {
             if (!student || student.role !== 'student') {
                 return res.status(400).json({ message: 'Invalid student_id' });
             }
+            cf_handle = (await CFAccount.findOne({ student_id })).cf_account;
+        } else if (req.user.role !== 'student') {
+            return res.status(403).json({ message: 'Only students can create student exercises under their own name' });
         }
         const { exercise_id } = req.body;
         if (!exercise_id || !require('mongoose').Types.ObjectId.isValid(exercise_id)) {
@@ -33,9 +39,10 @@ exports.createStudentExercise = async (req, res) => {
         if (!membership) {
             return res.status(403).json({ message: 'Student may not solve this exercise' });
         }
-        const {solved, completionType} = await CodeforcesService.verifyProblemSolved(req.user.cf_handle, exercise.cf_code);
+        let {solved, completionType} = await CodeforcesService.verifyProblemSolved(cf_handle, exercise.cf_code);
         if (!solved) {
-            return res.status(400).json({ message: 'Exercise not yet completed on Codeforces' });
+            if (req.user.role === 'admin') completionType = 'normal';
+            else return res.status(400).json({ message: 'Exercise not yet completed on Codeforces' });
         }
         const studentExercise = await StudentExercise.create({
             student_id,

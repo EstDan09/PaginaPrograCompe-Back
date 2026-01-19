@@ -6,7 +6,8 @@
     "dev": "nodemon ./src/server.js",
     "start": "node ./src/server.js",
     "test": "NODE_ENV=test jest --runInBand",
-    "populate" : "node ./src/populate.js"
+    "populate" : "node ./src/populate.js",
+    "test_codeforces": "NODE_ENV=integration jest --runInBand ./src/services/codeforces.integration.test.js"
   },
   "keywords": [],
   "author": "",
