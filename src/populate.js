@@ -105,13 +105,14 @@ const populateDatabase = async() => {
         }
 
         const exercises = [];
+        const cfCodes = ['4A', '4B', '25A', '25B', '25C']; // Real Codeforces problem codes
         for (let i = 0; i < 5; i++) {
             const res = await request(app)
                 .post('/exercise/create')
                 .set('Authorization', `Bearer ${coachToken}`)
                 .send({
                     name: `Exercise ${i + 1}`,
-                    cf_code: `123${i}A`,
+                    cf_code: cfCodes[i],
                     parent_assignment: assignments[i]._id
                 });
             if (res.status !== 201) {

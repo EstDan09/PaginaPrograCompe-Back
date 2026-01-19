@@ -2,6 +2,7 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../app');
 const User = require('../models/User');
+const CFAccount = require('../models/CFAccount');
 const Group = require('../models/Group');
 const StudentGroup = require('../models/StudentGroup');
 
@@ -12,6 +13,11 @@ const createAndLoginUser = async (userData) => {
         email: `${userData.username}@test.com`,
         role: userData.role
     });
+
+    // Create CFAccount for students so they have cf_handle in JWT
+    if (userData.role === 'student') {
+        await CFAccount.create({ student_id: user._id, cf_account: `${userData.username}_cf`, is_verified_flag: true });
+    }
 
     const loginRes = await request(app)
         .post('/auth/login')

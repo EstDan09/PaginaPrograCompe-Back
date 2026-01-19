@@ -4,12 +4,10 @@ const User = require("../models/User");
 const Assignment = require("../models/Assignment");
 const Group = require("../models/Group");
 const StudentGroup = require("../models/StudentGroup");
+const CodeforcesService = require("../services/codeforces");
 
 exports.createStudentExercise = async (req, res) => {
     try {
-        // TODO : Validate exercise completion with codeforces
-        // TODO : Determine completion type with codeforces
-        const completion_type = "normal";
         const student_id = req.params.student_id ? req.params.student_id : req.user._id;
         if (req.params.student_id) {
             if (!student_id || !require('mongoose').Types.ObjectId.isValid(student_id)) {
@@ -35,10 +33,14 @@ exports.createStudentExercise = async (req, res) => {
         if (!membership) {
             return res.status(403).json({ message: 'Student may not solve this exercise' });
         }
+        const {solved, completionType} = await CodeforcesService.verifyProblemSolved(req.user.cf_handle, exercise.cf_code);
+        if (!solved) {
+            return res.status(400).json({ message: 'Exercise not yet completed on Codeforces' });
+        }
         const studentExercise = await StudentExercise.create({
             student_id,
             exercise_id,
-            completion_type
+            completion_type: completionType
         });
         res.status(201).json({ message: 'Student exercise created successfully', studentExercise });
     } catch (error) {

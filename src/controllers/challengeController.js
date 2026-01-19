@@ -1,5 +1,6 @@
 const Challenge = require("../models/Challenge");
 const User = require("../models/User");
+const CodeforcesService = require("../services/codeforces");
 
 exports.createChallenge = async (req, res) => {
     try {
@@ -19,6 +20,9 @@ exports.createChallenge = async (req, res) => {
         }
         const { cf_code } = req.body;
         if (!cf_code) {
+            return res.status(400).json({ message: 'Invalid cf_code' });
+        }
+        if (!(await CodeforcesService.validateCfCode(cf_code))) {
             return res.status(400).json({ message: 'Invalid cf_code' });
         }
         const challenge = await Challenge.create({
@@ -101,10 +105,13 @@ exports.verifyChallenge = async (req, res) => {
         if (req.user.role === 'student' && challenge.student_id.toString() !== req.user._id.toString()) {
             return res.status(400).json({ message: 'You can only verify your own challenges' });
         }
-        // TODO : ask codeforces API if user did actually complete challenge
+        const {solved, completionType} = await CodeforcesService.verifyProblemSolved(req.user.cf_handle, challenge.cf_code);
+        if (!solved) {
+            return res.status(400).json({ message: 'Challenge not yet completed on Codeforces' });
+        }
         const updateData = {
             is_completed_flag: true,
-            completion_type: "normal"
+            completion_type: completionType
         };
         const new_challenge = await Challenge.findByIdAndUpdate(challengeId, updateData, { new: true });
         res.status(200).json(new_challenge);
