@@ -1,6 +1,7 @@
 const CFAccount = require("../models/CFAccount");
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const CodeforcesService = require("../services/codeforces");
 
 exports.myCFAccount = async (req, res) => {
     try {
@@ -50,9 +51,10 @@ exports.startVerifyCFAccount = async (req, res) => {
         if (!cfAccount) {
            return res.status(500).json({ message: 'Server error: no associated CFAccount' }); 
         }
-        // TODO : find valid codeforces task
-        const cf_code = "1234A";
-        const verify_token = jwt.sign({ _id: req.user._id, cf_code }, process.env.SECRET_KEY, { expiresIn: '2m' });
+        const cf_problem = await CodeforcesService.getRandomValidProblem();
+        const cf_code = cf_problem.cf_code;
+        const VERIFY_PROBLEM_TIMELIMIT_SECONDS = 3600; // 1 hour
+        const verify_token = jwt.sign({ _id: req.user._id, cf_code }, process.env.SECRET_KEY, { expiresIn: `${VERIFY_PROBLEM_TIMELIMIT_SECONDS}s` });
         res.status(200).json({verification_token: verify_token, cf_code});
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
@@ -74,7 +76,9 @@ exports.endVerifyCFAccount = async (req, res) => {
         if (!cfAccount) {
            return res.status(500).json({ message: 'Server error: no associated CFAccount' }); 
         }
-        // TODO : Ask codeforces API to verify
+        if (await CodeforcesService.verifyProblemCompilationErrorRecent(cfAccount.cf_account, cf_code) === false) {
+            return res.status(400).json({ message: 'Verification problem not submitted yet.' });
+        }
         const updateData = {
             is_verified_flag: true
         };

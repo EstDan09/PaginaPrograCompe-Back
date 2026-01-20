@@ -4,12 +4,16 @@ const User = require("../models/User");
 const StudentGroup = require("../models/StudentGroup");
 const Assignment = require("../models/Assignment");
 const Exercise = require("../models/Exercise");
+const CodeforcesService = require("../services/codeforces");
 
 exports.createExercise = async (req, res) => {
     try {
         const { name, cf_code, parent_assignment } = req.body;
         if (!name || !parent_assignment || !cf_code) {
             return res.status(400).json({ message: 'Name, cf_code, and parent_assignment are required' });
+        }
+        if (!(await CodeforcesService.validateCfCode(cf_code))) {
+            return res.status(400).json({ message: 'Invalid cf_code' });
         }
         if (!mongoose.Types.ObjectId.isValid(parent_assignment)) {
             return res.status(400).json({ message: 'Invalid parent_assignment' });
