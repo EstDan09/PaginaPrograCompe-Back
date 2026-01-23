@@ -4,7 +4,6 @@ const CodeforcesService = require("../services/codeforces");
 
 exports.createChallenge = async (req, res) => {
     try {
-        // TODO : Verify cf exercise beforehand/check for completion
         if (req.user.role === 'student' && req.params.student_id && req.param.student_id !== req.user._id) {
             return res.status(400).json({ message: 'Can\'t create challenge for other student' });
         }

@@ -1,20 +1,8 @@
-/**
- * Integration Tests for Codeforces Service
- * These tests actually interact with the real Codeforces API
- * 
- * Test Configuration:
- * - Handle: fisher199 (real Codeforces user)
- * - Solved Problem: 1720D1 (user fisher199 has solved this)
- * - Unsolved Problem: 1A (user fisher199 has NOT solved this)
- */
-
 const codeforces = require("../services/codeforces");
 
-// Integration tests should run when NODE_ENV is NOT "test" (i.e., in production, undefined, or "integration")
 const shouldRunIntegration = process.env.NODE_ENV !== "test";
 
 describe("Codeforces Service - Integration Tests (Real API)", () => {
-  // Skip these tests if in test mode - they require real API
   const describeIntegration = shouldRunIntegration ? describe : describe.skip;
 
   const REAL_HANDLE = "fisher199";
@@ -42,7 +30,6 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
     });
 
     it("should properly distinguish between contest and normal submissions", async () => {
-      // Test with a real problem that was likely solved in practice mode
       const result = await codeforces.verifyProblemSolved(REAL_HANDLE, SOLVED_PROBLEM);
       if (result.solved) {
         expect(["contest", "normal"]).toContain(result.completionType);
@@ -95,7 +82,6 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
         const result = await codeforces.getProblemInfo("99999Z");
         expect(result.exists).toBe(false);
       } catch (error) {
-        // Non-existent contest IDs throw errors, which is acceptable
         expect(error.message).toContain("Failed to get problem info");
       }
     });
@@ -121,7 +107,6 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
 
     it("should be case-sensitive for handles", async () => {
       const result = await codeforces.verifyExistingCodeforcesAccount("FISHER199");
-      // Codeforces API might be case-insensitive, but we should handle the response
       expect(typeof result).toBe("boolean");
     });
   });
@@ -149,7 +134,6 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
         const result = await codeforces.getUserInfo("ThisHandleDefinitelyDoesNotExist123456");
         expect(result).toBeNull();
       } catch (error) {
-        // Codeforces API may throw error for invalid handles, which is acceptable behavior
         expect(error.message).toContain("Failed to get user info");
       }
     });
@@ -181,7 +165,6 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
       expect(Array.isArray(resultPage1)).toBe(true);
       expect(Array.isArray(resultPage2)).toBe(true);
       
-      // Pages should be different (not same submissions)
       if (resultPage1.length > 0 && resultPage2.length > 0) {
         expect(resultPage1[0].id).not.toEqual(resultPage2[0].id);
       }
@@ -212,7 +195,6 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
       const result2 = await codeforces.getRandomValidProblem();
       const result3 = await codeforces.getRandomValidProblem();
       
-      // At least one should be different (very unlikely all 3 are same)
       const allSame = result1.cf_code === result2.cf_code && result2.cf_code === result3.cf_code;
       expect(allSame).toBe(false);
     });
@@ -278,10 +260,6 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
   });
 });
 
-/**
- * Helper function to extract contest ID and problem index
- * Duplicated from main service for test independence
- */
 function extractContestAndProblem(cfCode) {
   const match = cfCode.match(/^(\d+)([A-Z][0-9]*)$/);
   if (!match) {

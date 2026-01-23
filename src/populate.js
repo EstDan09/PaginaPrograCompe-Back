@@ -105,7 +105,7 @@ const populateDatabase = async() => {
         }
 
         const exercises = [];
-        const cfCodes = ['4A', '4B', '25A', '25B', '25C'];
+        const cfCodes = ['2190A', '2190B1', '2190B2', '2190C', '1486D'];
         for (let i = 0; i < 5; i++) {
             const res = await request(app)
                 .post('/exercise/create')
@@ -170,7 +170,6 @@ const populateDatabase = async() => {
             challenges.push(res.body.challenge);
         }
 
-        /*
         for (let i = 0; i < 2; i++) {
             const res = await request(app)
                 .put(`/challenge/verify/${challenges[i]._id}`)
@@ -179,7 +178,6 @@ const populateDatabase = async() => {
                 throw new Error('Failed to verify challenge: ' + res.text);
             }
         }
-            */
 
         {
             const res = await request(app)

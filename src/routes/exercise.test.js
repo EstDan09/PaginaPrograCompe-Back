@@ -16,7 +16,6 @@ const createAndLoginUser = async (userData) => {
         role: userData.role 
     });
     
-    // Create CFAccount for students so they have cf_handle in JWT
     if (userData.role === "student") {
         await CFAccount.create({ student_id: user._id, cf_account: `${userData.username}_cf`, is_verified_flag: true });
     }
