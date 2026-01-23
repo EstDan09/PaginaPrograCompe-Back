@@ -6,6 +6,7 @@ const Group = require("../models/Group");
 const StudentGroup = require("../models/StudentGroup");
 const CFAccount = require("../models/CFAccount");
 const CodeforcesService = require("../services/codeforces");
+const mongoose = require('mongoose');
 
 exports.createStudentExercise = async (req, res) => {
     try {
@@ -13,7 +14,7 @@ exports.createStudentExercise = async (req, res) => {
         let cf_handle = req.user.cf_handle;
         if (req.params.student_id) {
             student_id = req.params.student_id;
-            if (!student_id || !require('mongoose').Types.ObjectId.isValid(student_id)) {
+            if (!student_id || !mongoose.Types.ObjectId.isValid(student_id)) {
                 return res.status(400).json({ message: 'Invalid student_id' });
             }
             const student = await User.findById(student_id);
@@ -25,7 +26,7 @@ exports.createStudentExercise = async (req, res) => {
             return res.status(403).json({ message: 'Only students can create student exercises under their own name' });
         }
         const { exercise_id } = req.body;
-        if (!exercise_id || !require('mongoose').Types.ObjectId.isValid(exercise_id)) {
+        if (!exercise_id || !mongoose.Types.ObjectId.isValid(exercise_id)) {
             return res.status(400).json({ message: 'Invalid exercise_id' });
         }
         const exercise = await Exercise.findById(exercise_id);
@@ -108,6 +109,9 @@ exports.getStudentExercises = async (req, res) => {
 exports.getStudentExerciseById = async (req, res) => {
     try {
         const studentExerciseId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(studentExerciseId)) {
+            return res.status(404).json({ message: 'StudentExercise not found' });
+        }
         const studentExercise = await StudentExercise.findById(studentExerciseId);
         if (!studentExercise) {
             return res.status(404).json({ message: 'StudentExercise not found' });
@@ -121,6 +125,9 @@ exports.getStudentExerciseById = async (req, res) => {
 exports.deleteStudentExercise = async (req, res) => {
     try {
         const studentExerciseId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(studentExerciseId)) {
+            return res.status(404).json({ message: 'StudentExercise not found' });
+        }
         const studentExercise = await StudentExercise.findById(studentExerciseId);
         if (!studentExercise) {
             return res.status(404).json({ message: 'StudentExercise not found' });

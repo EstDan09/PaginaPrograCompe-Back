@@ -1,6 +1,7 @@
 const Challenge = require("../models/Challenge");
 const User = require("../models/User");
 const CodeforcesService = require("../services/codeforces");
+const mongoose = require('mongoose');
 
 exports.createChallenge = async (req, res) => {
     try {
@@ -9,7 +10,7 @@ exports.createChallenge = async (req, res) => {
         }
         const student_id = req.params.student_id ? req.params.student_id : req.user._id;
         if (req.params.student_id) {
-            if (!student_id || !require('mongoose').Types.ObjectId.isValid(student_id)) {
+            if (!student_id || !mongoose.Types.ObjectId.isValid(student_id)) {
                 return res.status(400).json({ message: 'Invalid student_id' });
             }
             const student = await User.findById(student_id);
@@ -58,7 +59,7 @@ exports.getChallenges = async (req, res) => {
 exports.getChallengeById = async (req, res) => {
     try {
         const challengeId = req.params.id;
-        if (!challengeId || !require('mongoose').Types.ObjectId.isValid(challengeId)) {
+        if (!challengeId || !mongoose.Types.ObjectId.isValid(challengeId)) {
             return res.status(404).json({ message: 'Challenge not found' });
         }
         const challenge = await Challenge.findById(challengeId);
@@ -74,7 +75,7 @@ exports.getChallengeById = async (req, res) => {
 exports.deleteChallenge = async (req, res) => {
     try {
         const challengeId = req.params.id;
-        if (!challengeId || !require('mongoose').Types.ObjectId.isValid(challengeId)) {
+        if (!challengeId || !mongoose.Types.ObjectId.isValid(challengeId)) {
             return res.status(404).json({ message: 'Challenge not found' });
         }
         const challenge = await Challenge.findById(challengeId);
@@ -94,7 +95,7 @@ exports.deleteChallenge = async (req, res) => {
 exports.verifyChallenge = async (req, res) => {
     try {
         const challengeId = req.params.id;
-        if (!challengeId || !require('mongoose').Types.ObjectId.isValid(challengeId)) {
+        if (!challengeId || !mongoose.Types.ObjectId.isValid(challengeId)) {
             return res.status(404).json({ message: 'Challenge not found' });
         }
         const challenge = await Challenge.findById(challengeId);

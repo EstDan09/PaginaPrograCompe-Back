@@ -66,6 +66,9 @@ exports.getExercises = async (req, res) => {
 exports.getExerciseById = async (req, res) => {
     try {
         const exerciseId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(exerciseId)) {
+            return res.status(404).json({ message: 'Exercise not found' });
+        }
         const exercise = await Exercise.findById(exerciseId);
         if (!exercise) {
             return res.status(404).json({ message: 'Exercise not found' });
@@ -92,6 +95,9 @@ exports.getExerciseById = async (req, res) => {
 exports.updateExercise = async (req, res) => {
     try {
         const exerciseId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(exerciseId)) {
+            return res.status(404).json({ message: 'Exercise not found' });
+        }
         const exercise = await Exercise.findById(exerciseId);
         if (!exercise) {
             return res.status(404).json({ message: 'Exercise not found' });
@@ -114,6 +120,9 @@ exports.updateExercise = async (req, res) => {
 exports.deleteExercise = async (req, res) => {
     try {
         const exerciseId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(exerciseId)) {
+            return res.status(404).json({ message: 'Exercise not found' });
+        }
         const exercise = await Exercise.findById(exerciseId);
         if (!exercise) {
             return res.status(404).json({ message: 'Exercise not found' });

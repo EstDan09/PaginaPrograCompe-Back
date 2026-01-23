@@ -1,14 +1,15 @@
 const User = require("../models/User");
 const StudentGroup = require("../models/StudentGroup");
 const Group = require("../models/Group");
+const mongoose = require('mongoose');
 
 exports.createStudentGroup = async (req, res) => {
     try {
         const { student_id, group_id } = req.body;
-        if (!student_id || !require('mongoose').Types.ObjectId.isValid(student_id)) {
+        if (!student_id || !mongoose.Types.ObjectId.isValid(student_id)) {
             return res.status(400).json({ message: 'Invalid student_id' });
         }
-        if (!group_id || !require('mongoose').Types.ObjectId.isValid(group_id)) {
+        if (!group_id || !mongoose.Types.ObjectId.isValid(group_id)) {
             return res.status(400).json({ message: 'Invalid group_id' });
         }
         const student = await User.findOne({ _id: student_id });
@@ -57,6 +58,9 @@ exports.getStudentGroups = async (req, res) => {
 exports.getStudentGroupById = async (req, res) => {
     try {
         const studentGroupId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(studentGroupId)) {
+            return res.status(404).json({ message: 'StudentGroup not found' });
+        }
         const studentGroup = await StudentGroup.findById(studentGroupId);
         if (!studentGroup) {
             return res.status(404).json({ message: 'StudentGroup not found' });
@@ -70,6 +74,9 @@ exports.getStudentGroupById = async (req, res) => {
 exports.deleteStudentGroup = async (req, res) => {
     try {
         const studentGroupId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(studentGroupId)) {
+            return res.status(404).json({ message: 'StudentGroup not found' });
+        }
         const studentGroup = await StudentGroup.findById(studentGroupId);
         if (!studentGroup) {
             return res.status(404).json({ message: 'StudentGroup not found' });

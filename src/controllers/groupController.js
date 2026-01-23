@@ -1,6 +1,7 @@
 const Group = require("../models/Group");
 const User = require("../models/User");
 const StudentGroup = require("../models/StudentGroup");
+const mongoose = require('mongoose');
 
 exports.createGroup = async (req, res) => {
     try {
@@ -11,6 +12,9 @@ exports.createGroup = async (req, res) => {
         if (req.user.role === 'admin') {
             if (!parent_coach) {
                 return res.status(400).json({ message: 'Name and parent_coach are required' });
+            }
+            if (!mongoose.Types.ObjectId.isValid(parent_coach)) {
+                return res.status(400).json({ message: 'Invalid parent_coach ID' });
             }
             const user = await User.findById(parent_coach);
             if (!user || user.role !== 'coach') {
@@ -46,6 +50,9 @@ exports.getGroups = async (req, res) => {
 exports.getGroupById = async (req, res) => {
     try {
         const groupId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
         const group = await Group.findById(groupId);
         if (!group) {
             return res.status(404).json({ message: 'Group not found' });
@@ -68,6 +75,9 @@ exports.getGroupById = async (req, res) => {
 exports.updateGroup = async (req, res) => {
     try {
         const groupId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
         const group = await Group.findById(groupId);
         if (!group) {
             return res.status(404).json({ message: 'Group not found' });
@@ -89,6 +99,9 @@ exports.updateGroup = async (req, res) => {
 exports.deleteGroup = async (req, res) => {
     try {
         const groupId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
         const group = await Group.findById(groupId);
         if (!group) {
             return res.status(404).json({ message: 'Group not found' });
@@ -106,6 +119,9 @@ exports.deleteGroup = async (req, res) => {
 exports.createGroupInviteCode = async (req, res) => {
     try {
         const groupId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
         const group = await Group.findById(groupId);
         if (!group) {
             return res.status(404).json({ message: 'Group not found' });
@@ -133,6 +149,9 @@ exports.createGroupInviteCode = async (req, res) => {
 exports.getGroupInviteCode = async (req, res) => {
     try {
         const groupId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
         const group = await Group.findById(groupId);
         if (!group) {
             return res.status(404).json({ message: 'Group not found' });
@@ -152,6 +171,9 @@ exports.getGroupInviteCode = async (req, res) => {
 exports.deleteGroupInviteCode = async (req, res) => {
     try {
         const groupId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
         const group = await Group.findById(groupId);
         if (!group) {
             return res.status(404).json({ message: 'Group not found' });
@@ -172,6 +194,9 @@ exports.deleteGroupInviteCode = async (req, res) => {
 exports.getGroupMessages = async (req, res) => {
     try {
         const groupId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
         const group = await Group.findById(groupId);
         if (!group) {
             return res.status(404).json({ message: 'Group not found' });
@@ -201,6 +226,9 @@ exports.sendGroupMessage = async (req, res) => {
             return res.status(400).json({ message: 'Message text exceeds maximum length of 1000 characters' });
         }
         const groupId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
         const group = await Group.findById(groupId);
         if (!group) {
             return res.status(404).json({ message: 'Group not found' });

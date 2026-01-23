@@ -58,6 +58,9 @@ exports.getAssignments = async (req, res) => {
 exports.getAssignmentById = async (req, res) => {
     try {
         const assignmentId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+            return res.status(404).json({ message: 'Assignment not found' });
+        }
         const assignment = await Assignment.findById(assignmentId);
         if (!assignment) {
             return res.status(404).json({ message: 'Assignment not found' });
@@ -83,6 +86,9 @@ exports.getAssignmentById = async (req, res) => {
 exports.updateAssignment = async (req, res) => {
     try {
         const assignmentId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+            return res.status(404).json({ message: 'Assignment not found' });
+        }
         const assignment = await Assignment.findById(assignmentId);
         if (!assignment) {
             return res.status(404).json({ message: 'Assignment not found' });
@@ -106,6 +112,9 @@ exports.updateAssignment = async (req, res) => {
 exports.deleteAssignment = async (req, res) => {
     try {
         const assignmentId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+            return res.status(404).json({ message: 'Assignment not found' });
+        }
         const assignment = await Assignment.findById(assignmentId);
         if (!assignment) {
             return res.status(404).json({ message: 'Assignment not found' });
