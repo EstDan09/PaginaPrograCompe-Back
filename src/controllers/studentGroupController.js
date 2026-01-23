@@ -1,14 +1,15 @@
 const User = require("../models/User");
 const StudentGroup = require("../models/StudentGroup");
 const Group = require("../models/Group");
+const mongoose = require('mongoose');
 
 exports.createStudentGroup = async (req, res) => {
     try {
         const { student_id, group_id } = req.body;
-        if (!student_id || !require('mongoose').Types.ObjectId.isValid(student_id)) {
+        if (!student_id || !mongoose.Types.ObjectId.isValid(student_id)) {
             return res.status(400).json({ message: 'Invalid student_id' });
         }
-        if (!group_id || !require('mongoose').Types.ObjectId.isValid(group_id)) {
+        if (!group_id || !mongoose.Types.ObjectId.isValid(group_id)) {
             return res.status(400).json({ message: 'Invalid group_id' });
         }
         const student = await User.findOne({ _id: student_id });
@@ -57,6 +58,9 @@ exports.getStudentGroups = async (req, res) => {
 exports.getStudentGroupById = async (req, res) => {
     try {
         const studentGroupId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(studentGroupId)) {
+            return res.status(404).json({ message: 'StudentGroup not found' });
+        }
         const studentGroup = await StudentGroup.findById(studentGroupId);
         if (!studentGroup) {
             return res.status(404).json({ message: 'StudentGroup not found' });
@@ -70,6 +74,9 @@ exports.getStudentGroupById = async (req, res) => {
 exports.deleteStudentGroup = async (req, res) => {
     try {
         const studentGroupId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(studentGroupId)) {
+            return res.status(404).json({ message: 'StudentGroup not found' });
+        }
         const studentGroup = await StudentGroup.findById(studentGroupId);
         if (!studentGroup) {
             return res.status(404).json({ message: 'StudentGroup not found' });
@@ -82,6 +89,27 @@ exports.deleteStudentGroup = async (req, res) => {
         }
         await studentGroup.deleteOne();
         res.status(200).json({ message: 'StudentGroup deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+exports.useGroupInviteCode = async (req, res) => {
+    try {
+        const { invite_code } = req.body;
+        if (!invite_code) {
+            return res.status(400).json({ message: 'Invite code is required' });
+        }
+        const group = await Group.findOne({ invite_code: invite_code });
+        if (!group) {
+            return res.status(404).json({ message: 'Invalid invite code' });
+        }
+        const existingMembership = await StudentGroup.findOne({ student_id: req.user._id, group_id: group._id });
+        if (existingMembership) {
+            return res.status(400).json({ message: 'You are already a member of this group' });
+        }
+        await StudentGroup.create({ student_id: req.user._id, group_id: group._id });
+        res.status(200).json({ message: 'Successfully joined the group' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

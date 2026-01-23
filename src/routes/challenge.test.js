@@ -21,7 +21,6 @@ describe("Challenge API", () => {
     const createAndLoginUser = async ({ username, password, role }) => {
         const user = await User.create({ username, password_hash: password, email: `${username}@test.com`, role });
         
-        // Create CFAccount for students so they have cf_handle in JWT
         if (role === "student") {
             await CFAccount.create({ student_id: user._id, cf_account: `${username}_cf`, is_verified_flag: true });
         }
@@ -60,21 +59,18 @@ describe("Challenge API", () => {
             role: "coach"
         }));
 
-        // Create a group
         const groupRes = await request(app)
             .post("/group/create")
             .set("Authorization", `Bearer ${coachToken}`)
             .send({ name: "Test Group", description: "Group for testing" });
         const testGroup = groupRes.body;
 
-        // Create an assignment
         const assignmentRes = await request(app)
             .post("/assignment/create")
             .set("Authorization", `Bearer ${coachToken}`)
             .send({ title: "Test Assignment", description: "Assignment for testing", dueDate: new Date(), parent_group: testGroup._id });
         const testAssignment = assignmentRes.body;
 
-        // Create exercises
         const exercise1Res = await request(app)
             .post("/exercise/create")
             .set("Authorization", `Bearer ${coachToken}`)
@@ -87,7 +83,6 @@ describe("Challenge API", () => {
             .send({ name: "Test Exercise 2", cf_code: "456B", parent_assignment: testAssignment._id });
         testExercises.exercise2 = exercise2Res.body;
 
-        // Add student to group
         await StudentGroup.create({ student_id: testUsers.student._id, group_id: testGroup._id });
     });
 
@@ -116,7 +111,7 @@ describe("Challenge API", () => {
                 .set("Authorization", `Bearer ${studentToken}`)
                 .send({ cf_code: "123A" });
 
-            expect(res.statusCode).toBe(500); // MongoDB duplicate key error
+            expect(res.statusCode).toBe(500);
         });
 
         it("rejects missing cf_code", async () => {
@@ -234,7 +229,6 @@ describe("Challenge API", () => {
         let deleteChallengeStudent, deleteChallengeOther;
 
         beforeAll(async () => {
-            // Create challenges to delete
             const res1 = await request(app)
                 .post("/challenge/create")
                 .set("Authorization", `Bearer ${studentToken}`)
@@ -285,7 +279,6 @@ describe("Challenge API", () => {
         let verifyChallengeStudent, verifyChallengeOther;
 
         beforeAll(async () => {
-            // Create challenges to verify
             const res1 = await request(app)
                 .post("/challenge/create")
                 .set("Authorization", `Bearer ${studentToken}`)

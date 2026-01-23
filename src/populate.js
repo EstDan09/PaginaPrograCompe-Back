@@ -105,7 +105,7 @@ const populateDatabase = async() => {
         }
 
         const exercises = [];
-        const cfCodes = ['4A', '4B', '25A', '25B', '25C'];
+        const cfCodes = ['2190A', '2190B1', '2190B2', '2190C', '1486D'];
         for (let i = 0; i < 5; i++) {
             const res = await request(app)
                 .post('/exercise/create')
@@ -129,6 +129,67 @@ const populateDatabase = async() => {
             if (res.status !== 201) {
                 throw new Error('Failed to create student-group: ' + res.text);
             }
+        }
+
+        for (let i = 0; i < 3; i++) {
+            const messages = [
+                { message: 'Welcome to the group! Looking forward to working together.' },
+                { message: 'Has everyone checked out the first assignment?' },
+                { message: 'Great progress everyone! Keep it up!' },
+                { message: 'Remember the deadline is next Friday.' },
+                { message: 'Feel free to ask questions in this chat.' }
+            ];
+            
+            for (let msg of messages) {
+                const msgRes = await request(app)
+                    .post(`/group/send-message/${groups[i]._id}`)
+                    .set('Authorization', `Bearer ${coachToken}`)
+                    .send(msg);
+                if (msgRes.status !== 201) {
+                    throw new Error('Failed to create message: ' + msgRes.text);
+                }
+            }
+        }
+
+        // Add student messages to first group
+        const studentMessages = [
+            { message: 'Hi coach! I have a question about exercise 1.' },
+            { message: 'Never mind, I figured it out!' },
+            { message: 'Thanks for the guidance!' }
+        ];
+        for (let msg of studentMessages) {
+            const msgRes = await request(app)
+                .post(`/group/send-message/${groups[0]._id}`)
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send(msg);
+            if (msgRes.status !== 201) {
+                throw new Error('Failed to create student message: ' + msgRes.text);
+            }
+        }
+
+        const inviteGroupRes = await request(app)
+            .post('/group/create')
+            .set('Authorization', `Bearer ${coachToken}`)
+            .send({ name: 'Public Group with Invite Code', description: 'Join this group using an invite code!' });
+        if (inviteGroupRes.status !== 201) {
+            throw new Error('Failed to create invite group: ' + inviteGroupRes.text);
+        }
+        const inviteGroup = inviteGroupRes.body;
+
+        const inviteCodeRes = await request(app)
+            .post(`/group/create-invite-code/${inviteGroup._id}`)
+            .set('Authorization', `Bearer ${coachToken}`);
+        if (inviteCodeRes.status !== 201) {
+            throw new Error('Failed to create invite code: ' + inviteCodeRes.text);
+        }
+        const inviteCode = inviteCodeRes.body.invite_code;
+
+        const welcomeRes = await request(app)
+            .post(`/group/send-message/${inviteGroup._id}`)
+            .set('Authorization', `Bearer ${coachToken}`)
+            .send({ message: 'Welcome to this public group! You can join using the invite code.' });
+        if (welcomeRes.status !== 201) {
+            throw new Error('Failed to create welcome message: ' + welcomeRes.text);
         }
 
         for (let exercise of exercises) {
@@ -170,7 +231,6 @@ const populateDatabase = async() => {
             challenges.push(res.body.challenge);
         }
 
-        /*
         for (let i = 0; i < 2; i++) {
             const res = await request(app)
                 .put(`/challenge/verify/${challenges[i]._id}`)
@@ -179,7 +239,6 @@ const populateDatabase = async() => {
                 throw new Error('Failed to verify challenge: ' + res.text);
             }
         }
-            */
 
         {
             const res = await request(app)

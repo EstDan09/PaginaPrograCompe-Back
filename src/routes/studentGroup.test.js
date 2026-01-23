@@ -14,7 +14,6 @@ const createAndLoginUser = async (userData) => {
         role: userData.role
     });
 
-    // Create CFAccount for students so they have cf_handle in JWT
     if (userData.role === 'student') {
         await CFAccount.create({ student_id: user._id, cf_account: `${userData.username}_cf`, is_verified_flag: true });
     }
@@ -402,6 +401,202 @@ describe('StudentGroup API', () => {
                 .delete(`/student-group/delete/${testStudentGroups.sg2._id}`);
 
             expect(res.statusCode).toBe(401);
+        });
+    });
+
+    describe('Use group invite code', () => {
+        let inviteGroup;
+        let inviteCode;
+
+        beforeEach(async () => {
+            // Create a group and generate invite code
+            const groupRes = await request(app)
+                .post('/group/create')
+                .set('Authorization', `Bearer ${coachToken}`)
+                .send({ name: 'Invite Code Test Group', description: 'For testing invite codes' });
+            inviteGroup = groupRes.body;
+
+            const codeRes = await request(app)
+                .post(`/group/create-invite-code/${inviteGroup._id}`)
+                .set('Authorization', `Bearer ${coachToken}`);
+            inviteCode = codeRes.body.invite_code;
+        });
+
+        it('student can join group with valid invite code', async () => {
+            const res = await request(app)
+                .post('/student-group/use-invite-code')
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({ invite_code: inviteCode });
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.message).toContain('Successfully joined the group');
+
+            // Verify the student is now part of the group
+            const verifyRes = await request(app)
+                .get('/student-group/get')
+                .set('Authorization', `Bearer ${studentToken}`);
+            
+            const membership = verifyRes.body.find(sg => sg.group_id === inviteGroup._id);
+            expect(membership).toBeDefined();
+        });
+
+        it('student cannot join group with invalid invite code', async () => {
+            const res = await request(app)
+                .post('/student-group/use-invite-code')
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({ invite_code: 'invalid-code-xyz' });
+
+            expect(res.statusCode).toBe(404);
+            expect(res.body.message).toBe('Invalid invite code');
+        });
+
+        it('returns 400 when invite code is missing', async () => {
+            const res = await request(app)
+                .post('/student-group/use-invite-code')
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({});
+
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toBe('Invite code is required');
+        });
+
+        it('returns 400 when invite code is empty string', async () => {
+            const res = await request(app)
+                .post('/student-group/use-invite-code')
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({ invite_code: '' });
+
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toBe('Invite code is required');
+        });
+
+        it('student cannot join same group twice with invite code', async () => {
+            // First join
+            const firstRes = await request(app)
+                .post('/student-group/use-invite-code')
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({ invite_code: inviteCode });
+
+            expect(firstRes.statusCode).toBe(200);
+
+            // Try to join again
+            const secondRes = await request(app)
+                .post('/student-group/use-invite-code')
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({ invite_code: inviteCode });
+
+            expect(secondRes.statusCode).toBe(400);
+            expect(secondRes.body.message).toBe('You are already a member of this group');
+        });
+
+        it('multiple students can join group with same invite code', async () => {
+            const res1 = await request(app)
+                .post('/student-group/use-invite-code')
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({ invite_code: inviteCode });
+
+            expect(res1.statusCode).toBe(200);
+
+            const res2 = await request(app)
+                .post('/student-group/use-invite-code')
+                .set('Authorization', `Bearer ${studentToken2}`)
+                .send({ invite_code: inviteCode });
+
+            expect(res2.statusCode).toBe(200);
+
+            // Verify both students are in the group
+            const memberRes = await request(app)
+                .get('/student-group/get')
+                .query({ group_id: inviteGroup._id })
+                .set('Authorization', `Bearer ${coachToken}`);
+
+            const memberIds = memberRes.body.map(sg => sg.student_id);
+            expect(memberIds).toContain(testUsers.student._id.toString());
+            expect(memberIds).toContain(testUsers.student2._id.toString());
+        });
+
+        it('unauthenticated user cannot use invite code', async () => {
+            const res = await request(app)
+                .post('/student-group/use-invite-code')
+                .send({ invite_code: inviteCode });
+
+            expect(res.statusCode).toBe(401);
+        });
+
+        it('coach cannot use invite code to join group', async () => {
+            const res = await request(app)
+                .post('/student-group/use-invite-code')
+                .set('Authorization', `Bearer ${coachToken}`)
+                .send({ invite_code: inviteCode });
+
+            expect(res.statusCode).toBe(403);
+        });
+
+        it('admin cannot use invite code to join group', async () => {
+            const res = await request(app)
+                .post('/student-group/use-invite-code')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ invite_code: inviteCode });
+
+            expect(res.statusCode).toBe(403);
+        });
+
+        it('student can still use invite code after other student joins', async () => {
+            // First student joins
+            await request(app)
+                .post('/student-group/use-invite-code')
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({ invite_code: inviteCode });
+
+            // Second student joins
+            const res = await request(app)
+                .post('/student-group/use-invite-code')
+                .set('Authorization', `Bearer ${studentToken2}`)
+                .send({ invite_code: inviteCode });
+
+            expect(res.statusCode).toBe(200);
+        });
+
+        it('deleted invite code cannot be used', async () => {
+            // Join with valid code first
+            const joinRes = await request(app)
+                .post('/student-group/use-invite-code')
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({ invite_code: inviteCode });
+
+            expect(joinRes.statusCode).toBe(200);
+
+            // Delete the invite code
+            await request(app)
+                .delete(`/group/delete-invite-code/${inviteGroup._id}`)
+                .set('Authorization', `Bearer ${coachToken}`);
+
+            // Try to use the deleted invite code with another student
+            const failRes = await request(app)
+                .post('/student-group/use-invite-code')
+                .set('Authorization', `Bearer ${studentToken3}`)
+                .send({ invite_code: inviteCode });
+
+            expect(failRes.statusCode).toBe(404);
+            expect(failRes.body.message).toBe('Invalid invite code');
+        });
+
+        it('student is added to correct group when using invite code', async () => {
+            const res = await request(app)
+                .post('/student-group/use-invite-code')
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({ invite_code: inviteCode });
+
+            expect(res.statusCode).toBe(200);
+
+            // Verify student is in the correct group
+            const memberRes = await request(app)
+                .get('/student-group/get')
+                .set('Authorization', `Bearer ${studentToken}`);
+
+            const membership = memberRes.body.find(sg => sg.group_id === inviteGroup._id);
+            expect(membership).toBeDefined();
+            expect(membership.student_id).toBe(testUsers.student._id.toString());
         });
     });
 });
