@@ -86,3 +86,24 @@ exports.deleteStudentGroup = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
+
+exports.useGroupInviteCode = async (req, res) => {
+    try {
+        const { invite_code } = req.body;
+        if (!invite_code) {
+            return res.status(400).json({ message: 'Invite code is required' });
+        }
+        const group = await Group.findOne({ invite_code: invite_code });
+        if (!group) {
+            return res.status(404).json({ message: 'Invalid invite code' });
+        }
+        const existingMembership = await StudentGroup.findOne({ student_id: req.user._id, group_id: group._id });
+        if (existingMembership) {
+            return res.status(400).json({ message: 'You are already a member of this group' });
+        }
+        await StudentGroup.create({ student_id: req.user._id, group_id: group._id });
+        res.status(200).json({ message: 'Successfully joined the group' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};

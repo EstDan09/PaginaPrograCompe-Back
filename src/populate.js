@@ -131,6 +131,67 @@ const populateDatabase = async() => {
             }
         }
 
+        for (let i = 0; i < 3; i++) {
+            const messages = [
+                { message: 'Welcome to the group! Looking forward to working together.' },
+                { message: 'Has everyone checked out the first assignment?' },
+                { message: 'Great progress everyone! Keep it up!' },
+                { message: 'Remember the deadline is next Friday.' },
+                { message: 'Feel free to ask questions in this chat.' }
+            ];
+            
+            for (let msg of messages) {
+                const msgRes = await request(app)
+                    .post(`/group/send-message/${groups[i]._id}`)
+                    .set('Authorization', `Bearer ${coachToken}`)
+                    .send(msg);
+                if (msgRes.status !== 201) {
+                    throw new Error('Failed to create message: ' + msgRes.text);
+                }
+            }
+        }
+
+        // Add student messages to first group
+        const studentMessages = [
+            { message: 'Hi coach! I have a question about exercise 1.' },
+            { message: 'Never mind, I figured it out!' },
+            { message: 'Thanks for the guidance!' }
+        ];
+        for (let msg of studentMessages) {
+            const msgRes = await request(app)
+                .post(`/group/send-message/${groups[0]._id}`)
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send(msg);
+            if (msgRes.status !== 201) {
+                throw new Error('Failed to create student message: ' + msgRes.text);
+            }
+        }
+
+        const inviteGroupRes = await request(app)
+            .post('/group/create')
+            .set('Authorization', `Bearer ${coachToken}`)
+            .send({ name: 'Public Group with Invite Code', description: 'Join this group using an invite code!' });
+        if (inviteGroupRes.status !== 201) {
+            throw new Error('Failed to create invite group: ' + inviteGroupRes.text);
+        }
+        const inviteGroup = inviteGroupRes.body;
+
+        const inviteCodeRes = await request(app)
+            .post(`/group/create-invite-code/${inviteGroup._id}`)
+            .set('Authorization', `Bearer ${coachToken}`);
+        if (inviteCodeRes.status !== 201) {
+            throw new Error('Failed to create invite code: ' + inviteCodeRes.text);
+        }
+        const inviteCode = inviteCodeRes.body.invite_code;
+
+        const welcomeRes = await request(app)
+            .post(`/group/send-message/${inviteGroup._id}`)
+            .set('Authorization', `Bearer ${coachToken}`)
+            .send({ message: 'Welcome to this public group! You can join using the invite code.' });
+        if (welcomeRes.status !== 201) {
+            throw new Error('Failed to create welcome message: ' + welcomeRes.text);
+        }
+
         for (let exercise of exercises) {
             const res = await request(app)
                 .post(`/student-exercise/create/${student._id}`)

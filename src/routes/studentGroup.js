@@ -2,9 +2,11 @@ const StudentGroupController = require("../controllers/studentGroupController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const adminMiddleware = require("../middlewares/adminMiddleware");
 const coachMiddleware = require("../middlewares/coachMiddleware");
+const fstudentMiddleware = require("../middlewares/fstudentMiddleware");
 
 const admin_ops = [authMiddleware.auth, adminMiddleware.auth];
 const coach_ops = [authMiddleware.auth, coachMiddleware.auth];
+const fstudent_ops = [authMiddleware.auth, fstudentMiddleware.auth];
 const normal_ops = [authMiddleware.auth];
 
 module.exports = (app) => {
@@ -51,4 +53,15 @@ module.exports = (app) => {
      * Body Output: N/A
      */
     app.delete("/student-group/delete/:id", coach_ops, StudentGroupController.deleteStudentGroup);
+
+    /**
+     * Use group invite code
+     * 
+     * Previous authentication: Student
+     * 
+     * Body Input: { invite_code: string }
+     * 
+     * Body Output: { message: string }
+     */
+    app.post("/student-group/use-invite-code", fstudent_ops, StudentGroupController.useGroupInviteCode);
 }
