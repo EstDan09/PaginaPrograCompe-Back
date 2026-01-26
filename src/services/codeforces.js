@@ -298,6 +298,197 @@ function extractContestAndProblem(cfCode) {
   };
 }
 
+async function getStudentKPIs(cfHandle) {
+  if (IS_TEST_MODE) {
+    return {
+      rating: 1243,
+      solvedTotal: 1243,
+      streakDays: 6
+    };
+  }
+
+  try {
+    const userInfo = await getUserInfo(cfHandle);
+    if (!userInfo) {
+      throw new Error(`User ${cfHandle} not found`);
+    }
+
+    const submissions = await getUserSubmissions(cfHandle, 1, 10000);
+    const solvedProblems = new Set();
+    submissions.forEach(sub => {
+      if (sub.verdict === "OK") {
+        solvedProblems.add(`${sub.problem.contestId}${sub.problem.index}`);
+      }
+    });
+
+    const streakDays = submissions.length > 0 ? 1 : 0;
+
+    return {
+      rating: userInfo.rating || 0,
+      solvedTotal: solvedProblems.size,
+      streakDays: streakDays
+    };
+  } catch (error) {
+    throw new Error(`Failed to get student KPIs: ${error.message}`);
+  }
+}
+
+async function getStudentRatingGraph(cfHandle) {
+  if (IS_TEST_MODE) {
+    return {
+      min: 820,
+      max: 1243,
+      series: [
+        { t: "2025-08-01", rating: 820 },
+        { t: "2025-12-20", rating: 930 },
+        { t: "2026-01-20", rating: 1100 }
+      ]
+    };
+  }
+
+  try {
+    const submissions = await getUserSubmissions(cfHandle, 1, 10000);
+    
+    const ratingChanges = [];
+    const seenRatings = new Set();
+
+    submissions.forEach(sub => {
+      if (sub.author && sub.author.rating !== undefined && !seenRatings.has(sub.author.rating)) {
+        const date = new Date(sub.creationTimeSeconds * 1000);
+        ratingChanges.push({
+          t: date.toISOString().split('T')[0],
+          rating: sub.author.rating
+        });
+        seenRatings.add(sub.author.rating);
+      }
+    });
+
+    const ratings = ratingChanges.map(rc => rc.rating);
+    const min = ratings.length > 0 ? Math.min(...ratings) : 0;
+    const max = ratings.length > 0 ? Math.max(...ratings) : 0;
+
+    return {
+      min: min,
+      max: max,
+      series: ratingChanges.slice(0, 20) 
+    };
+  } catch (error) {
+    throw new Error(`Failed to get student rating graph: ${error.message}`);
+  }
+}
+
+async function getStudentSolvesByRating(cfHandle) {
+  if (IS_TEST_MODE) {
+    return {
+      binSize: 100,
+      bins: [
+        { from: 800, to: 899, label: "800", solved: 300 },
+        { from: 900, to: 999, label: "900", solved: 130 },
+        { from: 1000, to: 1099, label: "1000", solved: 160 },
+        { from: 1100, to: 1199, label: "1100", solved: 60 },
+        { from: 1200, to: 1299, label: "1200", solved: 100 }
+      ]
+    };
+  }
+
+  try {
+    const { status, result: problems } = await CodeforcesAPI.call("problemset.problems", {});
+    if (status !== "OK") {
+      throw new Error("Failed to fetch problems");
+    }
+
+    const submissions = await getUserSubmissions(cfHandle, 1, 10000);
+    const solvedProblems = new Set();
+
+    submissions.forEach(sub => {
+      if (sub.verdict === "OK") {
+        solvedProblems.add(`${sub.problem.contestId}${sub.problem.index}`);
+      }
+    });
+
+    const bins = {};
+    const binSize = 100;
+
+    for (let rating = 800; rating <= 3500; rating += binSize) {
+      bins[rating] = 0;
+    }
+
+    problems.problems.forEach(prob => {
+      if (prob.rating && solvedProblems.has(`${prob.contestId}${prob.index}`)) {
+        const binKey = Math.floor(prob.rating / binSize) * binSize;
+        if (bins[binKey] !== undefined) {
+          bins[binKey]++;
+        }
+      }
+    });
+
+    const binsArray = Object.entries(bins)
+      .filter(([key, value]) => value > 0)
+      .map(([from, solved]) => ({
+        from: parseInt(from),
+        to: parseInt(from) + binSize - 1,
+        label: from,
+        solved: solved
+      }));
+
+    return {
+      binSize: binSize,
+      bins: binsArray
+    };
+  } catch (error) {
+    throw new Error(`Failed to get student solves by rating: ${error.message}`);
+  }
+}
+
+async function getStudentSolvedTags(cfHandle) {
+  if (IS_TEST_MODE) {
+    return [
+      { tag: "implementation", solved: 453 },
+      { tag: "binary search", solved: 420 },
+      { tag: "greedy", solved: 524 },
+      { tag: "math", solved: 32 },
+      { tag: "graphs", solved: 532 }
+    ];
+  }
+
+  try {
+    const { status, result: problems } = await CodeforcesAPI.call("problemset.problems", {});
+    if (status !== "OK") {
+      throw new Error("Failed to fetch problems");
+    }
+
+    const submissions = await getUserSubmissions(cfHandle, 1, 10000);
+    const solvedProblems = new Set();
+
+    submissions.forEach(sub => {
+      if (sub.verdict === "OK") {
+        solvedProblems.add(`${sub.problem.contestId}${sub.problem.index}`);
+      }
+    });
+
+    const tagCount = {};
+
+    problems.problems.forEach(prob => {
+      if (solvedProblems.has(`${prob.contestId}${prob.index}`)) {
+        prob.tags?.forEach(tag => {
+          tagCount[tag] = (tagCount[tag] || 0) + 1;
+        });
+      }
+    });
+
+    const tagsArray = Object.entries(tagCount)
+      .map(([tag, solved]) => ({
+        tag: tag,
+        solved: solved
+      }))
+      .sort((a, b) => b.solved - a.solved);
+
+    return tagsArray;
+  } catch (error) {
+    throw new Error(`Failed to get student solved tags: ${error.message}`);
+  }
+}
+
 module.exports = {
   verifyProblemSolved,
   verifyProblemCompilationErrorRecent,
@@ -307,5 +498,9 @@ module.exports = {
   getUserInfo,
   getRandomValidProblem,
   getUserSubmissions,
-  verifyProblemTimelimitSeconds
+  verifyProblemTimelimitSeconds,
+  getStudentKPIs,
+  getStudentRatingGraph,
+  getStudentSolvesByRating,
+  getStudentSolvedTags
 };
