@@ -283,4 +283,59 @@ describe("Following API", () => {
             expect(typeof res.body.count).toBe("number");
         });
     });
+
+    describe("GET /following", () => {
+        beforeAll(async () => {
+            await Following.deleteMany({});
+            await Following.create({ student_1_id: student1._id, student_2_id: student2._id });
+            
+            const student3Res = await createAndLoginUser({
+                username: "student3",
+                password: "studentpass",
+                role: "student"
+            });
+            
+            await Following.create({ student_1_id: student1._id, student_2_id: student3Res.user._id });
+        });
+
+        it("student can get their followings list", async () => {
+            const res = await request(app)
+                .get("/following")
+                .set("Authorization", `Bearer ${studentToken1}`);
+            
+            expect(res.statusCode).toBe(200);
+            expect(res.body).toHaveProperty("following");
+            expect(Array.isArray(res.body.following)).toBe(true);
+            expect(res.body.following.length).toBe(2);
+            expect(res.body.following[0]).toHaveProperty("name");
+            expect(res.body.following[0].name).toBe("student2");
+        });
+
+        it("student with no followings returns empty list", async () => {
+            const res = await request(app)
+                .get("/following")
+                .set("Authorization", `Bearer ${studentToken2}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body).toHaveProperty("following");
+            expect(Array.isArray(res.body.following)).toBe(true);
+            expect(res.body.following.length).toBe(0);
+        });
+
+        it("admin cannot access this endpoint", async () => {
+            const res = await request(app)
+                .get("/following")
+                .set("Authorization", `Bearer ${adminToken}`);
+
+            expect(res.statusCode).toBe(403);
+            expect(res.body.message).toBe("Access denied. Students only.");
+        });
+
+        it("unauthenticated user cannot access", async () => {
+            const res = await request(app)
+                .get("/following");
+
+            expect(res.statusCode).toBe(401);
+        });
+    });
 });

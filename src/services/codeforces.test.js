@@ -143,4 +143,101 @@ describe("Codeforces Service", () => {
       }
     });
   });
+
+  describe("getStudentKPIs", () => {
+    it("should return KPI object with rating, solvedTotal, and streakDays in test mode", async () => {
+      const result = await codeforces.getStudentKPIs("testuser");
+      expect(result).toHaveProperty("rating");
+      expect(result).toHaveProperty("solvedTotal");
+      expect(result).toHaveProperty("streakDays");
+      expect(typeof result.rating).toBe("number");
+      expect(typeof result.solvedTotal).toBe("number");
+      expect(typeof result.streakDays).toBe("number");
+    });
+
+    it("should return specific test values in test mode", async () => {
+      const result = await codeforces.getStudentKPIs("testuser");
+      expect(result.rating).toBe(1243);
+      expect(result.solvedTotal).toBe(1243);
+      expect(result.streakDays).toBe(6);
+    });
+  });
+
+  describe("getStudentRatingGraph", () => {
+    it("should return rating graph with min, max, and series in test mode", async () => {
+      const result = await codeforces.getStudentRatingGraph("testuser");
+      expect(result).toHaveProperty("min");
+      expect(result).toHaveProperty("max");
+      expect(result).toHaveProperty("series");
+      expect(typeof result.min).toBe("number");
+      expect(typeof result.max).toBe("number");
+      expect(Array.isArray(result.series)).toBe(true);
+    });
+
+    it("should return series with date and rating properties", async () => {
+      const result = await codeforces.getStudentRatingGraph("testuser");
+      if (result.series.length > 0) {
+        const point = result.series[0];
+        expect(point).toHaveProperty("t");
+        expect(point).toHaveProperty("rating");
+        expect(typeof point.rating).toBe("number");
+      }
+    });
+
+    it("should have min <= max in test mode", async () => {
+      const result = await codeforces.getStudentRatingGraph("testuser");
+      expect(result.min).toBeLessThanOrEqual(result.max);
+    });
+  });
+
+  describe("getStudentSolvesByRating", () => {
+    it("should return solves by rating with binSize and bins in test mode", async () => {
+      const result = await codeforces.getStudentSolvesByRating("testuser");
+      expect(result).toHaveProperty("binSize");
+      expect(result).toHaveProperty("bins");
+      expect(typeof result.binSize).toBe("number");
+      expect(Array.isArray(result.bins)).toBe(true);
+    });
+
+    it("should return bins with from, to, label, and solved properties", async () => {
+      const result = await codeforces.getStudentSolvesByRating("testuser");
+      if (result.bins.length > 0) {
+        const bin = result.bins[0];
+        expect(bin).toHaveProperty("from");
+        expect(bin).toHaveProperty("to");
+        expect(bin).toHaveProperty("label");
+        expect(bin).toHaveProperty("solved");
+        expect(typeof bin.solved).toBe("number");
+      }
+    });
+
+    it("should have proper bin ranges (to = from + binSize - 1)", async () => {
+      const result = await codeforces.getStudentSolvesByRating("testuser");
+      result.bins.forEach(bin => {
+        expect(bin.to).toBe(bin.from + result.binSize - 1);
+      });
+    });
+  });
+
+  describe("getStudentSolvedTags", () => {
+    it("should return array of tag objects in test mode", async () => {
+      const result = await codeforces.getStudentSolvedTags("testuser");
+      expect(Array.isArray(result)).toBe(true);
+      if (result.length > 0) {
+        const tag = result[0];
+        expect(tag).toHaveProperty("tag");
+        expect(tag).toHaveProperty("solved");
+        expect(typeof tag.tag).toBe("string");
+        expect(typeof tag.solved).toBe("number");
+      }
+    });
+
+    it("should return tags with correct structure", async () => {
+      const result = await codeforces.getStudentSolvedTags("testuser");
+      expect(result[0].tag).toBe("implementation");
+      expect(result[0].solved).toBe(453);
+      expect(result[result.length - 1].tag).toBe("graphs");
+      expect(result[result.length - 1].solved).toBe(532);
+    });
+  });
 });

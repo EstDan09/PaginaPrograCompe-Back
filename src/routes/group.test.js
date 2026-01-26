@@ -366,7 +366,6 @@ describe("Group API", () => {
 
     describe("Get group invite code", () => {
         beforeEach(async () => {
-            // Create a fresh group with invite code for testing
             const groupRes = await request(app)
                 .post("/group/create")
                 .set("Authorization", `Bearer ${coachToken2}`)
@@ -406,7 +405,6 @@ describe("Group API", () => {
         });
 
         it("returns 404 when group has no invite code", async () => {
-            // Create a fresh group without invite code
             const freshGroupRes = await request(app)
                 .post("/group/create")
                 .set("Authorization", `Bearer ${coachToken2}`)
@@ -465,7 +463,6 @@ describe("Group API", () => {
             expect(res.statusCode).toBe(200);
             expect(res.body.message).toBe("Invite code deleted successfully");
 
-            // Verify it's actually deleted
             const verifyRes = await request(app)
                 .get(`/group/get-invite-code/${groupWithCode._id}`)
                 .set("Authorization", `Bearer ${coachToken2}`);
@@ -499,7 +496,6 @@ describe("Group API", () => {
         });
 
         it("returns 400 when group has no invite code to delete", async () => {
-            // Create a fresh group without invite code
             const freshGroupRes = await request(app)
                 .post("/group/create")
                 .set("Authorization", `Bearer ${coachToken}`)
@@ -731,6 +727,174 @@ describe("Group API", () => {
             const res = await request(app)
                 .post(`/group/send-message/${testGroups.coachGroup._id}`)
                 .send({ message: "Unauthorized message" });
+
+            expect(res.statusCode).toBe(401);
+        });
+    });
+
+    describe("Get my groups summary", () => {
+        it("admin cannot get groups summary (access denied)", async () => {
+            const res = await request(app)
+                .get("/group/my-groups-summary")
+                .set("Authorization", `Bearer ${adminToken}`);
+
+            expect(res.statusCode).toBe(403);
+            expect(res.body.message).toBe("Access denied");
+        });
+
+        it("unauthenticated user cannot get groups summary", async () => {
+            const res = await request(app)
+                .get("/group/my-groups-summary");
+
+            expect(res.statusCode).toBe(401);
+        });
+
+        it("student with no groups returns empty array", async () => {
+            const newStudent = await User.create({ username: "nostudent", password_hash: "pass", email: "nostudent@test.com", role: "student" });
+            await CFAccount.create({ student_id: newStudent._id, cf_account: "nostudent_cf", is_verified_flag: true });
+
+            const loginRes = await request(app)
+                .post("/auth/login")
+                .send({ username: "nostudent", password: "pass" });
+
+            const res = await request(app)
+                .get("/group/my-groups-summary")
+                .set("Authorization", `Bearer ${loginRes.body.token}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(Array.isArray(res.body)).toBe(true);
+            expect(res.body.length).toBe(0);
+        });
+
+        it("coach with no groups returns empty array", async () => {
+            const newCoach = await User.create({ username: "newcoach", password_hash: "pass", email: "newcoach@test.com", role: "coach" });
+
+            const loginRes = await request(app)
+                .post("/auth/login")
+                .send({ username: "newcoach", password: "pass" });
+
+            const res = await request(app)
+                .get("/group/my-groups-summary")
+                .set("Authorization", `Bearer ${loginRes.body.token}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(Array.isArray(res.body)).toBe(true);
+            expect(res.body.length).toBe(0);
+        });
+    });
+
+    describe("Get group details", () => {
+        it("coach can get details of their own group", async () => {
+            const res = await request(app)
+                .get(`/group/details/${testGroups.coachGroup._id}`)
+                .set("Authorization", `Bearer ${coachToken}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body).toHaveProperty("group");
+            expect(res.body).toHaveProperty("assignments");
+            expect(res.body.group._id).toBe(testGroups.coachGroup._id.toString());
+            expect(res.body.group).toHaveProperty("name");
+            expect(res.body.group).toHaveProperty("description");
+            expect(res.body.group).toHaveProperty("owner");
+            expect(Array.isArray(res.body.assignments)).toBe(true);
+        });
+
+        it("student can get details of their group", async () => {
+            const res = await request(app)
+                .get(`/group/details/${testGroups.coachGroup._id}`)
+                .set("Authorization", `Bearer ${studentToken}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body).toHaveProperty("group");
+            expect(res.body).toHaveProperty("assignments");
+            expect(res.body.group._id).toBe(testGroups.coachGroup._id.toString());
+        });
+
+        it("student cannot get details of group they don't belong to", async () => {
+            const res = await request(app)
+                .get(`/group/details/${testGroups.adminGroup._id}`)
+                .set("Authorization", `Bearer ${studentToken}`);
+
+            expect(res.statusCode).toBe(403);
+            expect(res.body.message).toBe("Access denied");
+        });
+
+        it("coach cannot get details of another coach's group", async () => {
+            const res = await request(app)
+                .get(`/group/details/${testGroups.adminGroup._id}`)
+                .set("Authorization", `Bearer ${coachToken}`);
+
+            expect(res.statusCode).toBe(403);
+            expect(res.body.message).toBe("Access denied");
+        });
+
+        it("admin can get details of any group", async () => {
+            const res = await request(app)
+                .get(`/group/details/${testGroups.coachGroup._id}`)
+                .set("Authorization", `Bearer ${adminToken}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.group._id).toBe(testGroups.coachGroup._id.toString());
+        });
+
+        it("returns 404 for non-existent group", async () => {
+            const fakeId = new mongoose.Types.ObjectId();
+            const res = await request(app)
+                .get(`/group/details/${fakeId}`)
+                .set("Authorization", `Bearer ${adminToken}`);
+
+            expect(res.statusCode).toBe(404);
+            expect(res.body.message).toBe("Group not found");
+        });
+
+        it("returns 404 for invalid group id format", async () => {
+            const res = await request(app)
+                .get(`/group/details/invalid-id`)
+                .set("Authorization", `Bearer ${adminToken}`);
+
+            expect(res.statusCode).toBe(404);
+            expect(res.body.message).toBe("Group not found");
+        });
+
+        it("group details includes owner information", async () => {
+            const res = await request(app)
+                .get(`/group/details/${testGroups.coachGroup._id}`)
+                .set("Authorization", `Bearer ${coachToken}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.group.owner).toBeDefined();
+            expect(res.body.group.owner._id).toBe(testUsers.coach._id.toString());
+            expect(res.body.group.owner.username).toBe("coach");
+            expect(res.body.group.owner.role).toBe("coach");
+        });
+
+        it("group details includes assignments with exercise count", async () => {
+            const assignment = await require("../models/Assignment").create({
+                title: "Test Assignment",
+                description: "Test Description",
+                parent_group: testGroups.coachGroup._id,
+                parent_coach: testUsers.coach._id,
+                due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            });
+
+            const res = await request(app)
+                .get(`/group/details/${testGroups.coachGroup._id}`)
+                .set("Authorization", `Bearer ${coachToken}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(Array.isArray(res.body.assignments)).toBe(true);
+            const testAssignment = res.body.assignments.find(a => a._id === assignment._id.toString());
+            expect(testAssignment).toBeDefined();
+            expect(testAssignment).toHaveProperty("exerciseCount");
+            expect(testAssignment).toHaveProperty("title");
+            expect(testAssignment.title).toBe("Test Assignment");
+            expect(testAssignment).toHaveProperty("description");
+            expect(testAssignment).toHaveProperty("due_date");
+        });
+
+        it("unauthenticated user cannot get group details", async () => {
+            const res = await request(app)
+                .get(`/group/details/${testGroups.coachGroup._id}`);
 
             expect(res.statusCode).toBe(401);
         });
