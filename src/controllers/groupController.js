@@ -1,6 +1,8 @@
 const Group = require("../models/Group");
 const User = require("../models/User");
 const StudentGroup = require("../models/StudentGroup");
+const Assignment = require("../models/Assignment");
+const Exercise = require("../models/Assignment");
 const mongoose = require('mongoose');
 
 exports.createGroup = async (req, res) => {
@@ -250,6 +252,76 @@ exports.sendGroupMessage = async (req, res) => {
         group.group_messages.push(newMessage);
         await group.save();
         res.status(201).json(newMessage);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+/*
+[
+  {
+    groupId: "xxx",
+    name: "Algorithm analysis",
+    ownerUsername: "eddituss",
+    members: 23,
+    dueAssignments: 2,
+    role: "Student"
+  },
+{
+    groupId: "xxx2",
+    name: "Poo",
+    ownerUsername: "eddituss",
+    members: 23,
+    dueAssignments: 2,
+    role: "Student"
+  }
+
+]
+*/
+exports.getMyGroupsSummary = async (req, res) => {
+    try {
+        let groups;
+        if (req.user.role === 'coach') {
+            groups = await Group.find({ parent_coach: req.user._id }).select('_id name description');
+        } else if (req.user.role === 'student') {
+            const studentGroups = await StudentGroup.find({ student_id: req.user._id }).select('group_id');
+            const groupIds = studentGroups.map(sg => sg.group_id);
+            groups = await Group.find({ _id: { $in: groupIds } }).select('_id name description');
+        } else {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+        const summary = await Promise.all(groups.map(async (group) => {
+            const owner = await User.findById(group.parent_coach).select('username');
+            const memberCount = await StudentGroup.countDocuments({ group_id: group._id });
+            const role = (req.user.role === 'coach') ? 'Coach' : 'Student';
+            let dueAssignmentsCount = 0;
+            if (role === 'Student') {
+                const assignments = await Assignment.find({ parent_group: group._id, due_date: { $gte: new Date() } });
+                for (const assignment of assignments) {
+                    const exercises = await Exercise.find({ parent_assignment: assignment._id });
+                    let allCompleted = true;
+                    for (const exercise of exercises) {
+                        const completion = await mongoose.model('StudentExercise').findOne({ student_id: req.user._id, exercise_id: exercise._id });
+                        if (!completion) {
+                            allCompleted = false;
+                            break;
+                        }
+                    }
+                    if (!allCompleted) {
+                        dueAssignmentsCount += 1;
+                    }
+                }
+            }
+            return {
+                groupId: group._id,
+                name: group.name,
+                ownerUsername: owner.username,
+                members: memberCount,
+                dueAssignments: dueAssignmentsCount,
+                role: role
+            };
+        }));
+        res.status(200).json(summary);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
