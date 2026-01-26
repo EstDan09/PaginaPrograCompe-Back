@@ -384,7 +384,74 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
       const tagNames = result.map(t => t.tag);
       const uniqueTags = new Set(tagNames);
       expect(uniqueTags.size).toBe(tagNames.length);
-    });
+    }, 10000);
+  });
+
+  describeIntegration("getRandomUnsolvedFilteredProblem - Real API", () => {
+    it("should return a problem matching filter criteria", async () => {
+      const min_rating = 1000;
+      const max_rating = 1500;
+      const tags = ["implementation"];
+      const result = await codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, min_rating, max_rating, tags);
+
+      expect(result).toHaveProperty("cf_code");
+      expect(result).toHaveProperty("name");
+      expect(result).toHaveProperty("rating");
+      expect(result).toHaveProperty("contestId");
+      expect(result).toHaveProperty("tags");
+    }, 10000);
+
+    it("should return a problem with rating within specified range", async () => {
+      const min_rating = 1200;
+      const max_rating = 1800;
+      const result = await codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, min_rating, max_rating, ["implementation"]);
+
+      expect(result.rating).toBeGreaterThanOrEqual(min_rating);
+      expect(result.rating).toBeLessThanOrEqual(max_rating);
+    }, 10000);
+
+    it("should return a problem containing all required tags", async () => {
+      const tags = ["greedy"];
+      const result = await codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, 800, 2000, tags);
+
+      expect(Array.isArray(result.tags)).toBe(true);
+      tags.forEach(tag => {
+        expect(result.tags).toContain(tag);
+      });
+    }, 10000);
+
+    it("should return cf_code in correct format", async () => {
+      const result = await codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, 1000, 1500, ["implementation"]);
+      expect(result.cf_code).toMatch(/^\d+[A-Z]/);
+    }, 10000);
+
+    it("should return a valid problem from codeforces", async () => {
+      const result = await codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, 800, 1200, ["implementation"]);
+
+      const isValid = await codeforces.validateCfCode(result.cf_code);
+      expect(isValid).toBe(true);
+    }, 10000);
+
+    it("should handle multiple tags filter", async () => {
+      const tags = ["implementation", "greedy"];
+      const result = await codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, 1000, 1500, tags);
+
+      expect(Array.isArray(result.tags)).toBe(true);
+      tags.forEach(tag => {
+        expect(result.tags).toContain(tag);
+      });
+    }, 10000);
+
+    it("should return different problems on multiple calls", async () => {
+      const calls = await Promise.all([
+        codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, 800, 1200, ["implementation"]),
+        codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, 800, 1200, ["implementation"]),
+        codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, 800, 1200, ["implementation"])
+      ]);
+
+      const uniqueCodes = new Set(calls.map(p => p.cf_code));
+      expect(uniqueCodes.size).toBeGreaterThan(1);
+    }, 15000);
   });
 });
 

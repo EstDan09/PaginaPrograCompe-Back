@@ -118,7 +118,23 @@ module.exports = (app) => {
      */
     app.post("/group/send-message/:id", normal_ops, GroupController.sendGroupMessage);
 
+    /**
+     * Get summary of users groups
+     * 
+     * Previous authentication: Basic
+     * 
+     * Body Output: SEE ENDPOINT DOCUMENTATION
+     */
     app.get("/group/my-groups-summary", normal_ops, GroupController.getMyGroupsSummary);
 
+    /**
+     * Get group details
+     * 
+     * Previous authentication: Basic
+     * 
+     * UrlParam Input: :id [string]
+     * 
+     * Body Output: SEE ENDPOINT DOCUMENTATION
+     */
     app.get("/group/details/:id", normal_ops, GroupController.getGroupDetails);
 }

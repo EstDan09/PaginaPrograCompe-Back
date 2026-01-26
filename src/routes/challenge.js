@@ -77,6 +77,14 @@ module.exports = (app) => {
      */
     app.put("/challenge/verify/:id", student_ops, ChallengeController.verifyChallenge);
 
-    // TODO
-    //app.get("/challenge/ask", fstudent_ops, ChallengeController.askChallenge);
+    /**
+     * Ask challenge (get a random cf_code not yet completed by the student and that matches requested rating and tags)
+     * 
+     * Previous authentication: Student
+     * 
+     * Body Input: { min_rating?: int, max_rating?: int, tags?: string[] }
+     * 
+     * Body Output: { cf_code: string, name: string, rating: int, contestId: int, tags: string[] }
+     */
+    app.get("/challenge/ask", fstudent_ops, ChallengeController.askChallenge);
 }

@@ -65,5 +65,12 @@ module.exports = (app) => {
      */
     app.get("/following/count/:user_id", normal_ops, FollowingController.countFollowers);
 
+    /**
+     * List followings for the authenticated student
+     * 
+     * Previous authentication: Student
+     * 
+     * Body Output: { name: string }[]
+     */
     app.get("/following", fstudent_ops, FollowingController.listFollowings);
 }

@@ -249,6 +249,59 @@ async function getRandomValidProblem() {
   }
 }
 
+async function getRandomUnsolvedFilteredProblem(cf_handle, min_rating, max_rating, tags) {
+  if (IS_TEST_MODE) {
+    return {
+      cf_code: "4A",
+      name: "Watermelon",
+      rating: min_rating,
+      contestId: 4,
+      tags: tags
+    };
+  }
+
+  try {
+    const {status, result: problems} = await CodeforcesAPI.call("problemset.problems", {});
+    if (status !== "OK") {
+      throw new Error("Failed to fetch problems from Codeforces");
+    }
+    const problemsList = (problems.problems || [])
+      .map(value => ({ value, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ value }) => value);
+
+    if (problemsList.length === 0) {
+      throw new Error("No problems available from Codeforces API");
+    }
+
+    for (const problem of problemsList) {
+      if (!problem.rating) continue;
+      if (problem.rating < min_rating || problem.rating > max_rating) continue;
+
+      if (!problem.tags) continue;
+      const problemTags = problem.tags;
+      if (!tags.every(tag => problemTags.includes(tag))) continue;
+
+      const cf_code = `${problem.contestId}${problem.index}`;
+      const {solved} = await verifyProblemSolved(cf_handle, cf_code);
+      if (!solved) {
+        return {
+            cf_code: `${problem.contestId}${problem.index}`,
+            name: problem.name,
+            rating: problem.rating,
+            contestId: problem.contestId,
+            tags: problem.tags
+          };
+      }
+    }
+
+    throw new Error("No problems matching the filter criteria");
+
+  } catch (error) {
+    throw new Error(`Failed to get random problem: ${error.message}`);
+  }
+}
+
 async function getUserSubmissions(cfHandle, from = 1, count = 50) {
   if (IS_TEST_MODE) {
     return [
@@ -502,5 +555,6 @@ module.exports = {
   getStudentKPIs,
   getStudentRatingGraph,
   getStudentSolvesByRating,
-  getStudentSolvedTags
+  getStudentSolvedTags,
+  getRandomUnsolvedFilteredProblem
 };
