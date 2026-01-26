@@ -103,3 +103,15 @@ exports.countFollowers = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
+
+exports.listFollowings = async (req, res) => {
+    try {
+        const followings = await Following.find({ student_1_id: req.user._id }).populate('student_2_id', 'username');
+        const followingList = followings.map(follow => ({
+            name: follow.student_2_id.username
+        }));
+        res.status(200).json({ following: followingList });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
