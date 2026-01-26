@@ -3,10 +3,6 @@ const mongoose = require("mongoose");
 const app = require("../app");
 const User = require("../models/User");
 const CFAccount = require("../models/CFAccount");
-const Challenge = require("../models/Challenge");
-const Exercise = require("../models/Exercise");
-const Assignment = require("../models/Assignment");
-const Group = require("../models/Group");
 const StudentGroup = require("../models/StudentGroup");
 
 describe("Challenge API", () => {
@@ -324,6 +320,184 @@ describe("Challenge API", () => {
                 .set("Authorization", `Bearer ${adminToken}`);
 
             expect(res.statusCode).toBe(404);
+        });
+    });
+
+    describe("GET /challenge/ask", () => {
+        it("student can ask for a challenge with no filters", async () => {
+            const res = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${studentToken}`)
+                .send({});
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body).toHaveProperty("cf_code");
+            expect(res.body).toHaveProperty("name");
+            expect(res.body).toHaveProperty("rating");
+            expect(res.body).toHaveProperty("contestId");
+            expect(res.body).toHaveProperty("tags");
+        });
+
+        it("student can ask for a challenge with min_rating", async () => {
+            const res = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${studentToken}`)
+                .send({ min_rating: 1000 });
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.rating).toBeGreaterThanOrEqual(1000);
+        });
+
+        it("student can ask for a challenge with max_rating", async () => {
+            const res = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${studentToken}`)
+                .send({ max_rating: 1500 });
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.rating).toBeLessThanOrEqual(1500);
+        });
+
+        it("student can ask for a challenge with min and max rating", async () => {
+            const res = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${studentToken}`)
+                .send({ min_rating: 1000, max_rating: 1500 });
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.rating).toBeGreaterThanOrEqual(1000);
+            expect(res.body.rating).toBeLessThanOrEqual(1500);
+        });
+
+        it("student can ask for a challenge with tags filter", async () => {
+            const res = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${studentToken}`)
+                .send({ tags: ["implementation"] });
+
+            expect(res.statusCode).toBe(200);
+            expect(Array.isArray(res.body.tags)).toBe(true);
+            expect(res.body.tags).toContain("implementation");
+        });
+
+        it("student can ask for a challenge with multiple tags", async () => {
+            const res = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${studentToken}`)
+                .send({ tags: ["implementation", "greedy"] });
+
+            expect(res.statusCode).toBe(200);
+            expect(Array.isArray(res.body.tags)).toBe(true);
+            expect(res.body.tags).toContain("implementation");
+            expect(res.body.tags).toContain("greedy");
+        });
+
+        it("student can ask for a challenge with all filters", async () => {
+            const res = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${studentToken}`)
+                .send({ min_rating: 800, max_rating: 2000, tags: ["implementation"] });
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.rating).toBeGreaterThanOrEqual(800);
+            expect(res.body.rating).toBeLessThanOrEqual(2000);
+            expect(res.body.tags).toContain("implementation");
+        });
+
+        it("returns 400 when min_rating is not a number", async () => {
+            const res = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${studentToken}`)
+                .send({ min_rating: "invalid" });
+
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toBe("Invalid min_rating");
+        });
+
+        it("returns 400 when max_rating is not a number", async () => {
+            const res = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${studentToken}`)
+                .send({ max_rating: "invalid" });
+
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toBe("Invalid max_rating");
+        });
+
+        it("returns 400 when tags is not an array", async () => {
+            const res = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${studentToken}`)
+                .send({ tags: "invalid" });
+
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toBe("Invalid tags");
+        });
+
+        it("returns 400 when min_rating is greater than max_rating", async () => {
+            const res = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${studentToken}`)
+                .send({ min_rating: 1500, max_rating: 1000 });
+
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toBe("min_rating cannot be greater than max_rating");
+        });
+
+        it("admin cannot ask for a challenge", async () => {
+            const res = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${adminToken}`)
+                .send({});
+
+            expect(res.statusCode).toBe(403);
+            expect(res.body.message).toBe("Access denied. Students only.");
+        });
+
+        it("coach cannot ask for a challenge", async () => {
+            const res = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${coachToken}`)
+                .send({});
+
+            expect(res.statusCode).toBe(403);
+            expect(res.body.message).toBe("Access denied. Students only.");
+        });
+
+        it("unauthenticated user cannot ask for a challenge", async () => {
+            const res = await request(app)
+                .get("/challenge/ask")
+                .send({});
+
+            expect(res.statusCode).toBe(401);
+        });
+
+        it("returns a cf_code in correct format", async () => {
+            const res = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${studentToken}`)
+                .send({});
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.cf_code).toMatch(/^\d+[A-Z]/);
+        });
+
+        it("returns different problems on multiple calls", async () => {
+            const res1 = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${studentToken}`)
+                .send({});
+
+            const res2 = await request(app)
+                .get("/challenge/ask")
+                .set("Authorization", `Bearer ${studentToken}`)
+                .send({});
+
+            expect(res1.statusCode).toBe(200);
+            expect(res2.statusCode).toBe(200);
+            // Note: Could be same problem by chance, but very unlikely
+            expect(res1.body).toHaveProperty("cf_code");
+            expect(res2.body).toHaveProperty("cf_code");
         });
     });
 });

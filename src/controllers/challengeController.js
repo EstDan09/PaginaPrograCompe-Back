@@ -119,3 +119,26 @@ exports.verifyChallenge = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
+
+exports.askChallenge = async (req, res) => {
+    try {
+        const studentId = req.user._id;
+        const { min_rating, max_rating, tags } = req.body;
+        if (min_rating && typeof min_rating !== 'number') {
+            return res.status(400).json({ message: 'Invalid min_rating' });
+        }
+        if (max_rating && typeof max_rating !== 'number') {
+            return res.status(400).json({ message: 'Invalid max_rating' });
+        }
+        if (tags && !Array.isArray(tags)) {
+            return res.status(400).json({ message: 'Invalid tags' });
+        }
+        if (min_rating && max_rating && min_rating > max_rating) {
+            return res.status(400).json({ message: 'min_rating cannot be greater than max_rating' });
+        }
+        const cf_problem = await CodeforcesService.getRandomUnsolvedFilteredProblem(req.user.cf_handle, min_rating ? min_rating : 800, max_rating ? max_rating : 3500, tags ? tags : []);
+        res.status(200).json(cf_problem);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};

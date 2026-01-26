@@ -240,4 +240,57 @@ describe("Codeforces Service", () => {
       expect(result[result.length - 1].solved).toBe(532);
     });
   });
+
+  describe("getRandomUnsolvedFilteredProblem", () => {
+    it("should return a problem with correct structure in test mode", async () => {
+      const result = await codeforces.getRandomUnsolvedFilteredProblem("testuser", 800, 1200, ["implementation", "greedy"]);
+      expect(result).toHaveProperty("cf_code");
+      expect(result).toHaveProperty("name");
+      expect(result).toHaveProperty("rating");
+      expect(result).toHaveProperty("contestId");
+      expect(result).toHaveProperty("tags");
+    });
+
+    it("should return a problem with rating within the specified range", async () => {
+      const min = 1000;
+      const max = 1500;
+      const result = await codeforces.getRandomUnsolvedFilteredProblem("testuser", min, max, ["implementation"]);
+      expect(result.rating).toBe(min);
+    });
+
+    it("should return a problem with the specified tags", async () => {
+      const tags = ["implementation", "greedy"];
+      const result = await codeforces.getRandomUnsolvedFilteredProblem("testuser", 800, 1200, tags);
+      expect(result.tags).toEqual(tags);
+    });
+
+    it("should handle low rating range", async () => {
+      const result = await codeforces.getRandomUnsolvedFilteredProblem("testuser", 800, 900, ["implementation"]);
+      expect(result).toHaveProperty("cf_code");
+      expect(result.rating).toBe(800);
+    });
+
+    it("should handle high rating range", async () => {
+      const result = await codeforces.getRandomUnsolvedFilteredProblem("testuser", 2000, 2500, ["geometry"]);
+      expect(result).toHaveProperty("cf_code");
+      expect(result.rating).toBe(2000);
+    });
+
+    it("should return cf_code in correct format", async () => {
+      const result = await codeforces.getRandomUnsolvedFilteredProblem("testuser", 800, 1200, ["implementation"]);
+      expect(result.cf_code).toMatch(/^\d+[A-Z]/);
+    });
+
+    it("should return valid contest ID", async () => {
+      const result = await codeforces.getRandomUnsolvedFilteredProblem("testuser", 800, 1200, ["implementation"]);
+      expect(typeof result.contestId).toBe("number");
+      expect(result.contestId).toBeGreaterThan(0);
+    });
+
+    it("should return a name for the problem", async () => {
+      const result = await codeforces.getRandomUnsolvedFilteredProblem("testuser", 800, 1200, ["implementation"]);
+      expect(typeof result.name).toBe("string");
+      expect(result.name.length).toBeGreaterThan(0);
+    });
+  });
 });
