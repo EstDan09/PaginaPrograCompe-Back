@@ -326,3 +326,48 @@ exports.getMyGroupsSummary = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
+
+exports.getGroupDetails = async (req, res) => {
+    try {
+        const groupId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
+        const group = await Group.findById(groupId);
+        if (!group) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
+        if (req.user.role === 'coach' && group.parent_coach.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+        if (req.user.role === 'student') {
+            const membership = await StudentGroup.findOne({ student_id: req.user._id, group_id: groupId });
+            if (!membership) {
+                return res.status(403).json({ message: 'Access denied' });
+            }
+        }
+        const owner = await User.findById(group.parent_coach).select('_id username role');
+        const assignmentsData = await Assignment.find({ parent_group: group._id });
+        const assignments = await Promise.all(assignmentsData.map(async (assignment) => {
+            const exerciseCount = await Exercise.countDocuments({ parent_assignment: assignment._id });
+            return {
+                _id: assignment._id,
+                title: assignment.title,
+                description: assignment.description,
+                due_date: assignment.due_date,
+                exerciseCount: exerciseCount
+            };
+        }));
+        res.status(200).json({
+            group: {
+                _id: group._id,
+                name: group.name,
+                description: group.description,
+                owner: owner
+            },
+            assignments: assignments
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};

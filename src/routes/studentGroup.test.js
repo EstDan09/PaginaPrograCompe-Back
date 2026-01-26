@@ -409,7 +409,6 @@ describe('StudentGroup API', () => {
         let inviteCode;
 
         beforeEach(async () => {
-            // Create a group and generate invite code
             const groupRes = await request(app)
                 .post('/group/create')
                 .set('Authorization', `Bearer ${coachToken}`)
@@ -431,7 +430,6 @@ describe('StudentGroup API', () => {
             expect(res.statusCode).toBe(200);
             expect(res.body.message).toContain('Successfully joined the group');
 
-            // Verify the student is now part of the group
             const verifyRes = await request(app)
                 .get('/student-group/get')
                 .set('Authorization', `Bearer ${studentToken}`);
@@ -471,7 +469,6 @@ describe('StudentGroup API', () => {
         });
 
         it('student cannot join same group twice with invite code', async () => {
-            // First join
             const firstRes = await request(app)
                 .post('/student-group/use-invite-code')
                 .set('Authorization', `Bearer ${studentToken}`)
@@ -479,7 +476,6 @@ describe('StudentGroup API', () => {
 
             expect(firstRes.statusCode).toBe(200);
 
-            // Try to join again
             const secondRes = await request(app)
                 .post('/student-group/use-invite-code')
                 .set('Authorization', `Bearer ${studentToken}`)
@@ -504,7 +500,6 @@ describe('StudentGroup API', () => {
 
             expect(res2.statusCode).toBe(200);
 
-            // Verify both students are in the group
             const memberRes = await request(app)
                 .get('/student-group/get')
                 .query({ group_id: inviteGroup._id })
@@ -542,13 +537,11 @@ describe('StudentGroup API', () => {
         });
 
         it('student can still use invite code after other student joins', async () => {
-            // First student joins
             await request(app)
                 .post('/student-group/use-invite-code')
                 .set('Authorization', `Bearer ${studentToken}`)
                 .send({ invite_code: inviteCode });
 
-            // Second student joins
             const res = await request(app)
                 .post('/student-group/use-invite-code')
                 .set('Authorization', `Bearer ${studentToken2}`)
@@ -558,7 +551,6 @@ describe('StudentGroup API', () => {
         });
 
         it('deleted invite code cannot be used', async () => {
-            // Join with valid code first
             const joinRes = await request(app)
                 .post('/student-group/use-invite-code')
                 .set('Authorization', `Bearer ${studentToken}`)
@@ -566,12 +558,10 @@ describe('StudentGroup API', () => {
 
             expect(joinRes.statusCode).toBe(200);
 
-            // Delete the invite code
             await request(app)
                 .delete(`/group/delete-invite-code/${inviteGroup._id}`)
                 .set('Authorization', `Bearer ${coachToken}`);
 
-            // Try to use the deleted invite code with another student
             const failRes = await request(app)
                 .post('/student-group/use-invite-code')
                 .set('Authorization', `Bearer ${studentToken3}`)
@@ -589,7 +579,6 @@ describe('StudentGroup API', () => {
 
             expect(res.statusCode).toBe(200);
 
-            // Verify student is in the correct group
             const memberRes = await request(app)
                 .get('/student-group/get')
                 .set('Authorization', `Bearer ${studentToken}`);

@@ -119,4 +119,6 @@ module.exports = (app) => {
     app.post("/group/send-message/:id", normal_ops, GroupController.sendGroupMessage);
 
     app.get("/group/my-groups-summary", normal_ops, GroupController.getMyGroupsSummary);
+
+    app.get("/group/details/:id", normal_ops, GroupController.getGroupDetails);
 }
