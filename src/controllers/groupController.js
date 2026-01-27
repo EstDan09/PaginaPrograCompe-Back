@@ -257,27 +257,6 @@ exports.sendGroupMessage = async (req, res) => {
     }
 };
 
-/*
-[
-  {
-    groupId: "xxx",
-    name: "Algorithm analysis",
-    ownerUsername: "eddituss",
-    members: 23,
-    dueAssignments: 2,
-    role: "Student"
-  },
-{
-    groupId: "xxx2",
-    name: "Poo",
-    ownerUsername: "eddituss",
-    members: 23,
-    dueAssignments: 2,
-    role: "Student"
-  }
-
-]
-*/
 exports.getMyGroupsSummary = async (req, res) => {
     try {
         let groups;
