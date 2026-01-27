@@ -22,6 +22,8 @@ exports.createGroup = async (req, res) => {
             if (!user || user.role !== 'coach') {
                 return res.status(400).json({ message: 'parent_coach must be a valid coach user ID' });
             }
+        } else if (parent_coach) {
+            return res.status(403).json({ message: 'Coach can not specify coach parent for group' });
         }
         const group = await Group.create({ name, description, parent_coach: (parent_coach ? parent_coach : req.user._id) });
         res.status(201).json(group);
