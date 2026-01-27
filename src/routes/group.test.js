@@ -781,6 +781,16 @@ describe("Group API", () => {
             expect(Array.isArray(res.body)).toBe(true);
             expect(res.body.length).toBe(0);
         });
+
+        it("student with a group gets one group", async () => {
+            const res = await request(app)
+                .get("/group/my-groups-summary")
+                .set("Authorization", `Bearer ${studentToken}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(Array.isArray(res.body)).toBe(true);
+            expect(res.body.length).toBe(1);
+        });
     });
 
     describe("Get group details", () => {
