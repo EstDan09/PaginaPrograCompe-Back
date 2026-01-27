@@ -304,7 +304,7 @@ exports.getMyGroupsSummary = async (req, res) => {
             return {
                 groupId: group._id,
                 name: group.name,
-                ownerUsername: owner.username,
+                ownerUsername: owner?.username ?? 'Unknown',
                 members: memberCount,
                 dueAssignments: dueAssignmentsCount,
                 role: role
