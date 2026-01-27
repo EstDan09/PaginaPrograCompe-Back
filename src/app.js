@@ -145,6 +145,25 @@ app.use((req, res, next) => {
  */
 //require("./routes/reportsTemaplate")(app);
 
+const swaggerUI = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
+
+app.use('/api-docs', swaggerUI.serve);
+app.get('/api-docs', swaggerUI.setup(swaggerSpec, {
+  swaggerOptions: {
+    persistAuthorization: true,
+    docExpansion: 'list',
+    defaultModelsExpandDepth: 1,
+  },
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Competitive Programming Platform API Docs',
+}));
+
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });

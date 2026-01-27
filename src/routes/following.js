@@ -11,66 +11,295 @@ const normal_ops = [authMiddleware.auth];
 
 module.exports = (app) => {
     /**
-     * Create following
-     * 
-     * Previous authentication: Admin/Student
-     * 
-     * Body Input: { student_1_id?[optional if user is student]: string, student_2_id: string }
-     * 
-     * Body Output: { _id: string, student_1_id: string, student_2_id: string }
+     * @openapi
+     * /following/create:
+     *   post:
+     *     tags:
+     *       - Following
+     *     summary: Create following relationship between two students
+     *     description: Creates a following relationship where student_1 follows student_2. Admins can create followings for any student, but students can only create followings for themselves. Users cannot follow themselves.
+     *     security:
+     *       - BearerAuth: []
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - student_2_id
+     *             properties:
+     *               student_2_id:
+     *                 type: string
+     *                 description: ID of the student to follow (must be valid MongoDB ObjectId, must be different from student_1_id)
+     *               student_1_id:
+     *                 type: string
+     *                 description: ID of the student who follows (optional for students, defaults to authenticated user; required for admins)
+     *     responses:
+     *       '201':
+     *         description: Following created successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 _id:
+     *                   type: string
+     *                   description: Following relationship ID
+     *                 student_1_id:
+     *                   type: string
+     *                   description: ID of follower
+     *                 student_2_id:
+     *                   type: string
+     *                   description: ID of followed user
+     *       '400':
+     *         description: Bad request
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '403':
+     *         description: Forbidden - Authentication error or insufficient permissions
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '500':
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.post("/following/create", student_ops, FollowingController.createFollowing);
 
     /**
-     * Get followings by filters
-     * 
-     * Previous authentication: Admin/Student
-     * 
-     * UrlQuery Input: student_1_id? [string], student_2_id? [string]
-     * 
-     * Body Output: { _id: string, student_1_id: string, student_2_id: string }[]
+     * @openapi
+     * /following/get:
+     *   get:
+     *     tags:
+     *       - Following
+     *     summary: Get followings by student IDs
+     *     description: Retrieves following relationships filtered by student IDs. Students can only view their own followings (as student_1_id). Admins can view all followings with any filter combination.
+     *     security:
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: query
+     *         name: student_1_id
+     *         schema:
+     *           type: string
+     *         description: Filter by follower ID
+     *       - in: query
+     *         name: student_2_id
+     *         schema:
+     *           type: string
+     *         description: Filter by followed user ID
+     *     responses:
+     *       '200':
+     *         description: Array of following relationships
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 properties:
+     *                   _id:
+     *                     type: string
+     *                   student_1_id:
+     *                     type: string
+     *                   student_2_id:
+     *                     type: string
+     *       '403':
+     *         description: Forbidden - Students cannot filter by student_1_id
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '500':
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.get("/following/get", student_ops, FollowingController.getFollowing);
 
     /**
-     * Get following by id
-     * 
-     * Previous authentication: Admin
-     * 
-     * UrlParam Input: :id [string]
-     * 
-     * Body Output: { _id: string, student_1_id: string, student_2_id: string }
+     * @openapi
+     * /following/get/{id}:
+     *   get:
+     *     tags:
+     *       - Following
+     *     summary: Get following relationship by ID
+     *     description: Retrieves a specific following relationship by its ID. Only accessible to admins.
+     *     security:
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Following relationship ID (must be valid MongoDB ObjectId)
+     *     responses:
+     *       '200':
+     *         description: Following relationship found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 _id:
+     *                   type: string
+     *                 student_1_id:
+     *                   type: string
+     *                 student_2_id:
+     *                   type: string
+     *       '404':
+     *         description: Following not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '500':
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.get("/following/get/:id", admin_ops, FollowingController.getFollowingById);
 
     /**
-     * Delete following
-     * 
-     * Previous authentication: Admin/Student
-     * 
-     * UrlParam Input: :id [string]
-     * 
-     * Body Output: N/A
+     * @openapi
+     * /following/delete/{id}:
+     *   delete:
+     *     tags:
+     *       - Following
+     *     summary: Delete following relationship
+     *     description: Removes a following relationship. Students can only delete their own followings. Admins can delete any following.
+     *     security:
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Following relationship ID (must be valid MongoDB ObjectId)
+     *     responses:
+     *       '200':
+     *         description: Following deleted successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
+     *       '403':
+     *         description: Forbidden - Student attempting to delete another user's following
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '404':
+     *         description: Following not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '500':
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.delete("/following/delete/:id", student_ops, FollowingController.deleteFollowing);
 
     /**
-     * Get follower count for student
-     * 
-     * Previous authentication: Basic
-     * 
-     * UrlParam Input: :user_id [string]
-     * 
-     * Body Output: { count: int }
+     * @openapi
+     * /following/count/{user_id}:
+     *   get:
+     *     tags:
+     *       - Following
+     *     summary: Get follower count for a student
+     *     description: Counts how many users are following the specified student (user_id). This endpoint is publicly accessible to authenticated users.
+     *     security:
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: user_id
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Target student's ID (must be valid MongoDB ObjectId)
+     *     responses:
+     *       '200':
+     *         description: Follower count retrieved
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 count:
+     *                   type: number
+     *                   description: Number of followers
+     *       '400':
+     *         description: Invalid user_id format
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '500':
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.get("/following/count/:user_id", normal_ops, FollowingController.countFollowers);
 
     /**
-     * List followings for the authenticated student
-     * 
-     * Previous authentication: Student
-     * 
-     * Body Output: { name: string }[]
+     * @openapi
+     * /following:
+     *   get:
+     *     tags:
+     *       - Following
+     *     summary: List students followed by authenticated user
+     *     description: Returns a list of usernames that the authenticated student is following. Only accessible to students (not admins).
+     *     security:
+     *       - BearerAuth: []
+     *     responses:
+     *       '200':
+     *         description: List of followings
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 following:
+     *                   type: array
+     *                   items:
+     *                     type: object
+     *                     properties:
+     *                       name:
+     *                         type: string
+     *                         description: Username of followed student
+     *       '403':
+     *         description: Forbidden - Non-student user
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '500':
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.get("/following", fstudent_ops, FollowingController.listFollowings);
 }

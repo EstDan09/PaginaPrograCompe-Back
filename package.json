@@ -6,7 +6,7 @@
     "dev": "nodemon ./src/server.js",
     "start": "node ./src/server.js",
     "test": "NODE_ENV=test jest --runInBand",
-    "populate" : "node ./src/populate.js",
+    "populate": "node ./src/populate.js",
     "test_codeforces": "NODE_ENV=integration jest --runInBand ./src/services/codeforces.integration.test.js"
   },
   "keywords": [],
@@ -27,7 +27,9 @@
     "express-session": "^1.18.2",
     "jsonwebtoken": "^9.0.3",
     "method-override": "^3.0.0",
-    "mongoose": "^9.0.2"
+    "mongoose": "^9.0.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "jest": "^29.7.0",
@@ -36,6 +38,8 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "setupFiles": ["./jest.setup.js"]
+    "setupFiles": [
+      "./jest.setup.js"
+    ]
   }
 }

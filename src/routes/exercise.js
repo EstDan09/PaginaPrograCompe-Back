@@ -7,58 +7,288 @@ const normal_ops = [authMiddleware.auth];
 
 module.exports = (app) => {
     /**
-     * Create exercise
-     * 
-     * Previous authentication: Admin/Coach
-     * 
-     * Body Input: { name: string, cf_code: string, parent_assignment: string }
-     * 
-     * Body Output: { _id: string, name: string, cf_code: string, parent_assignment: string }
+     * @openapi
+     * /exercise/create:
+     *   post:
+     *     tags:
+     *       - Exercises
+     *     summary: Create exercise
+     *     description: Creates a new exercise within an assignment. Only coaches/admins can create exercises.
+     *     security:
+     *       - BearerAuth: []
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - name
+     *               - cf_code
+     *               - parent_assignment
+     *             properties:
+     *               name:
+     *                 type: string
+     *                 description: Exercise name (required, non-empty)
+     *               cf_code:
+     *                 type: string
+     *                 description: CodeForces problem code (required, format contestId+problemLetter)
+     *               parent_assignment:
+     *                 type: string
+     *                 description: Assignment ID (required, must be valid MongoDB ObjectId)
+     *     responses:
+     *       '201':
+     *         description: Exercise created successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 _id:
+     *                   type: string
+     *                 name:
+     *                   type: string
+     *                 cf_code:
+     *                   type: string
+     *                 parent_assignment:
+     *                   type: string
+     *       '400':
+     *         description: Bad request - Invalid assignment or missing fields
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '403':
+     *         description: Forbidden - Only coaches/admins can create
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '500':
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.post("/exercise/create", coach_ops, ExerciseController.createExercise);
 
     /**
-     * Get exercises by filters
-     * 
-     * Previous authentication: Basic
-     * 
-     * UrlQuery Input: name? [string], cf_code? [string], parent_assignment? [string]
-     * 
-     * Body Output: { _id: string, name: string, cf_code: string, parent_assignment: string }[]
+     * @openapi
+     * /exercise/get:
+     *   get:
+     *     tags:
+     *       - Exercises
+     *     summary: Get exercises by filters
+     *     description: Retrieves exercises matching optional filter criteria. All filters are optional.
+     *     security:
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: query
+     *         name: name
+     *         schema:
+     *           type: string
+     *         description: Filter by exercise name (partial match)
+     *       - in: query
+     *         name: cf_code
+     *         schema:
+     *           type: string
+     *         description: Filter by CodeForces problem code
+     *       - in: query
+     *         name: parent_assignment
+     *         schema:
+     *           type: string
+     *         description: Filter by parent assignment ID
+     *     responses:
+     *       '200':
+     *         description: Array of matching exercises
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 properties:
+     *                   _id:
+     *                     type: string
+     *                   name:
+     *                     type: string
+     *                   cf_code:
+     *                     type: string
+     *                   parent_assignment:
+     *                     type: string
+     *       '400':
+     *         description: Invalid query parameters
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '500':
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.get("/exercise/get", normal_ops, ExerciseController.getExercises);
 
     /**
-     * Get exercise by id
-     * 
-     * Previous authentication: Basic
-     * 
-     * UrlParam Input: :id [string]
-     * 
-     * Body Output: { _id: string, name: string, cf_code: string, parent_assignment: string }
+     * @openapi
+     * /exercise/get/{id}:
+     *   get:
+     *     tags:
+     *       - Exercises
+     *     summary: Get exercise by ID
+     *     description: Retrieves a specific exercise by its ID.
+     *     security:
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Exercise ID (must be valid MongoDB ObjectId)
+     *     responses:
+     *       '200':
+     *         description: Exercise found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 _id:
+     *                   type: string
+     *                 name:
+     *                   type: string
+     *                 cf_code:
+     *                   type: string
+     *                 parent_assignment:
+     *                   type: string
+     *       '404':
+     *         description: Exercise not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '500':
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.get("/exercise/get/:id", normal_ops, ExerciseController.getExerciseById);
 
     /**
-     * Update exercise
-     * 
-     * Previous authentication: Admin/Coach
-     * 
-     * Body Input: { name: string }
-     * UrlParam Input: :id [string]
-     * 
-     * Body Output: { _id: string, name: string, cf_code: string, parent_assignment: string }
+     * @openapi
+     * /exercise/update/{id}:
+     *   put:
+     *     tags:
+     *       - Exercises
+     *     summary: Update exercise
+     *     description: Updates an existing exercise. Only coaches/admins can update exercises.
+     *     security:
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Exercise ID (must be valid MongoDB ObjectId)
+     *     requestBody:
+     *       required: false
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               name:
+     *                 type: string
+     *                 description: New exercise name
+     *     responses:
+     *       '200':
+     *         description: Exercise updated successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 _id:
+     *                   type: string
+     *                 name:
+     *                   type: string
+     *                 cf_code:
+     *                   type: string
+     *                 parent_assignment:
+     *                   type: string
+     *       '403':
+     *         description: Forbidden - Only coaches/admins can update
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '404':
+     *         description: Exercise not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '500':
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.put("/exercise/update/:id", coach_ops, ExerciseController.updateExercise);
 
     /**
-     * Delete exercise
-     * 
-     * Previous authentication: Admin/Coach
-     * 
-     * UrlParam Input: :id [string]
-     * 
-     * Body Output: N/A
+     * @openapi
+     * /exercise/delete/{id}:
+     *   delete:
+     *     tags:
+     *       - Exercises
+     *     summary: Delete exercise
+     *     description: Deletes an exercise. Only coaches/admins can delete exercises. Associated student-exercise links may also be deleted.
+     *     security:
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Exercise ID (must be valid MongoDB ObjectId)
+     *     responses:
+     *       '200':
+     *         description: Exercise deleted successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
+     *       '403':
+     *         description: Forbidden - Only coaches/admins can delete
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '404':
+     *         description: Exercise not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '500':
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.delete("/exercise/delete/:id", coach_ops, ExerciseController.deleteExercise);
 }
