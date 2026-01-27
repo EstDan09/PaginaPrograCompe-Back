@@ -5,6 +5,8 @@ const GroupSchema = new Schema({
     name: { type: String, required: true },
     description : { type: String, required: false },
     parent_coach: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true, immutable: true },
+    group_messages: { type: [{ sender_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, message: String, timestamp: Date }], default: [] },
+    invite_code: { type: String, required: false, index: true }
 });
 
 GroupSchema.pre('remove', async function(next) {

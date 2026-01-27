@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const CFAccount = require('../models/CFAccount');
+const mongoose = require('mongoose');
 
 exports.createUser = async (req, res) => {
     try {
@@ -41,6 +42,9 @@ exports.getUsers = async (req, res) => {
 exports.getUserById = async (req, res) => {
     try {
         const userId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(404).json({ message: 'User not found' });
+        }
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -54,6 +58,9 @@ exports.getUserById = async (req, res) => {
 exports.updateUser = async (req, res) => {
     try {
         const userId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(404).json({ message: 'User not found' });
+        }
         const { password, email, role } = req.body;
         if (role && !['student', 'coach', 'admin'].includes(role)) {
             return res.status(400).json({ message: 'Invalid role' });
@@ -76,6 +83,9 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     try {
         const userId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(404).json({ message: 'User not found' });
+        }
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -125,6 +135,9 @@ exports.safeGetUsers = async (req, res) => {
 exports.safeGetUserById = async (req, res) => {
     try {
         const userId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(404).json({ message: 'User not found' });
+        }
         const user = await User.findById(userId, "_id username email role");
         if (!user) {
             return res.status(404).json({ message: 'User not found' });

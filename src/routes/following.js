@@ -2,9 +2,11 @@ const FollowingController = require("../controllers/followingController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const adminMiddleware = require("../middlewares/adminMiddleware");
 const studentMiddleware = require("../middlewares/studentMiddleware");
+const fstudentMiddleware = require("../middlewares/fstudentMiddleware");
 
 const admin_ops = [authMiddleware.auth, adminMiddleware.auth];
 const student_ops = [authMiddleware.auth, studentMiddleware.auth];
+const fstudent_ops = [authMiddleware.auth, fstudentMiddleware.auth];
 const normal_ops = [authMiddleware.auth];
 
 module.exports = (app) => {
@@ -62,4 +64,13 @@ module.exports = (app) => {
      * Body Output: { count: int }
      */
     app.get("/following/count/:user_id", normal_ops, FollowingController.countFollowers);
+
+    /**
+     * List followings for the authenticated student
+     * 
+     * Previous authentication: Student
+     * 
+     * Body Output: { name: string }[]
+     */
+    app.get("/following", fstudent_ops, FollowingController.listFollowings);
 }

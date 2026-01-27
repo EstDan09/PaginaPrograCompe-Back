@@ -159,6 +159,8 @@ require("./routes/studentExercise.js")(app);
 require("./routes/following.js")(app);
 require("./routes/challenge.js")(app);
 require("./routes/cfAccount.js")(app);
+require("./routes/stats.js")(app);
+require("./routes/directMessages.js")(app);
 
 
 /**

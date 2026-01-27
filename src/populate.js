@@ -105,7 +105,7 @@ const populateDatabase = async() => {
         }
 
         const exercises = [];
-        const cfCodes = ['4A', '4B', '25A', '25B', '25C'];
+        const cfCodes = ['2190A', '2190B1', '2190B2', '2190C', '1486D'];
         for (let i = 0; i < 5; i++) {
             const res = await request(app)
                 .post('/exercise/create')
@@ -129,6 +129,66 @@ const populateDatabase = async() => {
             if (res.status !== 201) {
                 throw new Error('Failed to create student-group: ' + res.text);
             }
+        }
+
+        for (let i = 0; i < 3; i++) {
+            const messages = [
+                { message: 'Yo renuncié mi brete porque me recansé.' },
+                { message: 'Yo realmente no tomo vino, ahora solo hago ejercicio.' },
+                { message: 'En la noche yo leo, mientras que los trabajadores duermen.' },
+                { message: 'En la noche yo resuelve rompecabezas, y por esto estoy tan feliz...' },
+                { message: 'y en mi recreo, yo bailo bugi; sí, en mi recreo, yo me bailo un bugi; el baile bugi, y mi recreo bugi... UUUU' }
+            ];
+            
+            for (let msg of messages) {
+                const msgRes = await request(app)
+                    .post(`/group/send-message/${groups[i]._id}`)
+                    .set('Authorization', `Bearer ${coachToken}`)
+                    .send(msg);
+                if (msgRes.status !== 201) {
+                    throw new Error('Failed to create message: ' + msgRes.text);
+                }
+            }
+        }
+
+        const studentMessages = [
+            { message: 'Hola coach, existen infinitos números primos?' },
+            { message: 'e uma mentira, ya me di cuenta que no' },
+            { message: 'Muchas gracias por su ayuda >:))' }
+        ];
+        for (let msg of studentMessages) {
+            const msgRes = await request(app)
+                .post(`/group/send-message/${groups[0]._id}`)
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send(msg);
+            if (msgRes.status !== 201) {
+                throw new Error('Failed to create student message: ' + msgRes.text);
+            }
+        }
+
+        const inviteGroupRes = await request(app)
+            .post('/group/create')
+            .set('Authorization', `Bearer ${coachToken}`)
+            .send({ name: 'Public Group with Invite Code', description: 'Join this group using an invite code!' });
+        if (inviteGroupRes.status !== 201) {
+            throw new Error('Failed to create invite group: ' + inviteGroupRes.text);
+        }
+        const inviteGroup = inviteGroupRes.body;
+
+        const inviteCodeRes = await request(app)
+            .post(`/group/create-invite-code/${inviteGroup._id}`)
+            .set('Authorization', `Bearer ${coachToken}`);
+        if (inviteCodeRes.status !== 201) {
+            throw new Error('Failed to create invite code: ' + inviteCodeRes.text);
+        }
+        const inviteCode = inviteCodeRes.body.invite_code;
+
+        const welcomeRes = await request(app)
+            .post(`/group/send-message/${inviteGroup._id}`)
+            .set('Authorization', `Bearer ${coachToken}`)
+            .send({ message: 'Welcome to this public group! You can join using the invite code.' });
+        if (welcomeRes.status !== 201) {
+            throw new Error('Failed to create welcome message: ' + welcomeRes.text);
         }
 
         for (let exercise of exercises) {
@@ -170,7 +230,6 @@ const populateDatabase = async() => {
             challenges.push(res.body.challenge);
         }
 
-        /*
         for (let i = 0; i < 2; i++) {
             const res = await request(app)
                 .put(`/challenge/verify/${challenges[i]._id}`)
@@ -179,7 +238,6 @@ const populateDatabase = async() => {
                 throw new Error('Failed to verify challenge: ' + res.text);
             }
         }
-            */
 
         {
             const res = await request(app)
@@ -191,7 +249,40 @@ const populateDatabase = async() => {
             }
         }
 
+        const directMessages = [
+            'Riquitikitak bro',
+            'Nah bro, ayer me quedé pescando ejercicios de codeforces',
+            'Me quedé más cansado que un martín pescador encargado de vigilar a Sísifo',
+            'Ish mae, mucha suerte pescando \'tonces, ojalá descanses más',
+            'Nos hablamos >:))'
+        ];
+
+        for (let i = 0; i < 3; i++) {
+            const msgRes = await request(app)
+                .post(`/direct-messages/send/${student2._id}`)
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({
+                    message: directMessages[i]
+                });
+            if (msgRes.status !== 201) {
+                throw new Error('Failed to create direct message: ' + msgRes.text);
+            }
+        }
+
+        for (let i = 3; i < 5; i++) {
+            const msgRes = await request(app)
+                .post(`/direct-messages/send/${student._id}`)
+                .set('Authorization', `Bearer ${studentToken2}`)
+                .send({
+                    message: directMessages[i]
+                });
+            if (msgRes.status !== 201) {
+                throw new Error('Failed to create direct message: ' + msgRes.text);
+            }
+        }
+
         console.log('Database populated successfully');
+
     } catch (error) {
         console.error('Error populating database:', error);
         throw error;

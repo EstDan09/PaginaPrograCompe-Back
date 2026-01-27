@@ -53,8 +53,7 @@ exports.startVerifyCFAccount = async (req, res) => {
         }
         const cf_problem = await CodeforcesService.getRandomValidProblem();
         const cf_code = cf_problem.cf_code;
-        const VERIFY_PROBLEM_TIMELIMIT_SECONDS = 3600; // 1 hour
-        const verify_token = jwt.sign({ _id: req.user._id, cf_code }, process.env.SECRET_KEY, { expiresIn: `${VERIFY_PROBLEM_TIMELIMIT_SECONDS}s` });
+        const verify_token = jwt.sign({ _id: req.user._id, cf_code }, process.env.SECRET_KEY, { expiresIn: `${CodeforcesService.verifyProblemTimelimitSeconds}s` });
         res.status(200).json({verification_token: verify_token, cf_code});
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });

@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const Following = require("../models/Following");
+const mongoose = require('mongoose');
 
 exports.createFollowing = async (req, res) => {
     try {
@@ -11,10 +12,10 @@ exports.createFollowing = async (req, res) => {
         if (student_1_id === student_2_id) {
             return res.status(400).json({ message: 'Can\'t follow self' });
         }
-        if (!student_1_id || !require('mongoose').Types.ObjectId.isValid(student_1_id)) {
+        if (!student_1_id || !mongoose.Types.ObjectId.isValid(student_1_id)) {
             return res.status(400).json({ message: 'Invalid student_1_id' });
         }
-        if (!student_2_id || !require('mongoose').Types.ObjectId.isValid(student_2_id)) {
+        if (!student_2_id || !mongoose.Types.ObjectId.isValid(student_2_id)) {
             return res.status(400).json({ message: 'Invalid student_2_id' });
         }
         if (req.user.role === 'student' && req.user._id !== student_1_id) {
@@ -57,6 +58,9 @@ exports.getFollowing = async (req, res) => {
 exports.getFollowingById = async (req, res) => {
     try {
         const followingId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(followingId)) {
+            return res.status(404).json({ message: 'Following not found' });
+        }
         const following = await Following.findById(followingId);
         if (!following) {
             return res.status(404).json({ message: 'Following not found' });
@@ -70,6 +74,9 @@ exports.getFollowingById = async (req, res) => {
 exports.deleteFollowing = async (req, res) => {
     try {
         const followingId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(followingId)) {
+            return res.status(404).json({ message: 'Following not found' });
+        }
         const following = await Following.findById(followingId);
         if (!following) {
             return res.status(404).json({ message: 'Following not found' });
@@ -87,8 +94,23 @@ exports.deleteFollowing = async (req, res) => {
 exports.countFollowers = async (req, res) => {
     try {
         const userId = req.params.user_id;
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: 'Invalid user_id' });
+        }
         const count = await Following.countDocuments({student_2_id: userId});
         res.status(200).json({count});
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+exports.listFollowings = async (req, res) => {
+    try {
+        const followings = await Following.find({ student_1_id: req.user._id }).populate('student_2_id', 'username');
+        const followingList = followings.map(follow => ({
+            name: follow.student_2_id.username
+        }));
+        res.status(200).json({ following: followingList });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

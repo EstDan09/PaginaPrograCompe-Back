@@ -1,20 +1,8 @@
-/**
- * Integration Tests for Codeforces Service
- * These tests actually interact with the real Codeforces API
- * 
- * Test Configuration:
- * - Handle: fisher199 (real Codeforces user)
- * - Solved Problem: 1720D1 (user fisher199 has solved this)
- * - Unsolved Problem: 1A (user fisher199 has NOT solved this)
- */
-
 const codeforces = require("../services/codeforces");
 
-// Integration tests should run when NODE_ENV is NOT "test" (i.e., in production, undefined, or "integration")
 const shouldRunIntegration = process.env.NODE_ENV !== "test";
 
 describe("Codeforces Service - Integration Tests (Real API)", () => {
-  // Skip these tests if in test mode - they require real API
   const describeIntegration = shouldRunIntegration ? describe : describe.skip;
 
   const REAL_HANDLE = "fisher199";
@@ -26,7 +14,7 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
       const result = await codeforces.verifyProblemSolved(REAL_HANDLE, SOLVED_PROBLEM);
       expect(result.solved).toBe(true);
       expect(["contest", "normal"]).toContain(result.completionType);
-    });
+    }, 10000);
 
     it("should confirm that fisher199 has NOT solved 1A", async () => {
       const result = await codeforces.verifyProblemSolved(REAL_HANDLE, UNSOLVED_PROBLEM);
@@ -42,7 +30,6 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
     });
 
     it("should properly distinguish between contest and normal submissions", async () => {
-      // Test with a real problem that was likely solved in practice mode
       const result = await codeforces.verifyProblemSolved(REAL_HANDLE, SOLVED_PROBLEM);
       if (result.solved) {
         expect(["contest", "normal"]).toContain(result.completionType);
@@ -95,7 +82,6 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
         const result = await codeforces.getProblemInfo("99999Z");
         expect(result.exists).toBe(false);
       } catch (error) {
-        // Non-existent contest IDs throw errors, which is acceptable
         expect(error.message).toContain("Failed to get problem info");
       }
     });
@@ -121,7 +107,6 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
 
     it("should be case-sensitive for handles", async () => {
       const result = await codeforces.verifyExistingCodeforcesAccount("FISHER199");
-      // Codeforces API might be case-insensitive, but we should handle the response
       expect(typeof result).toBe("boolean");
     });
   });
@@ -149,7 +134,6 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
         const result = await codeforces.getUserInfo("ThisHandleDefinitelyDoesNotExist123456");
         expect(result).toBeNull();
       } catch (error) {
-        // Codeforces API may throw error for invalid handles, which is acceptable behavior
         expect(error.message).toContain("Failed to get user info");
       }
     });
@@ -181,7 +165,6 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
       expect(Array.isArray(resultPage1)).toBe(true);
       expect(Array.isArray(resultPage2)).toBe(true);
       
-      // Pages should be different (not same submissions)
       if (resultPage1.length > 0 && resultPage2.length > 0) {
         expect(resultPage1[0].id).not.toEqual(resultPage2[0].id);
       }
@@ -212,10 +195,9 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
       const result2 = await codeforces.getRandomValidProblem();
       const result3 = await codeforces.getRandomValidProblem();
       
-      // At least one should be different (very unlikely all 3 are same)
       const allSame = result1.cf_code === result2.cf_code && result2.cf_code === result3.cf_code;
       expect(allSame).toBe(false);
-    });
+    }, 30000);
 
     it("should return problem with valid metadata", async () => {
       const result = await codeforces.getRandomValidProblem();
@@ -276,12 +258,203 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
       }
     });
   });
+
+  describeIntegration("getStudentKPIs - Real API", () => {
+    it("should retrieve KPIs for fisher199", async () => {
+      const result = await codeforces.getStudentKPIs(REAL_HANDLE);
+      expect(result).toHaveProperty("rating");
+      expect(result).toHaveProperty("solvedTotal");
+      expect(result).toHaveProperty("streakDays");
+    });
+
+    it("should return correct structure with number types", async () => {
+      const result = await codeforces.getStudentKPIs(REAL_HANDLE);
+      expect(typeof result.rating).toBe("number");
+      expect(typeof result.solvedTotal).toBe("number");
+      expect(typeof result.streakDays).toBe("number");
+      expect(result.solvedTotal).toBeGreaterThan(0);
+    });
+
+    it("should return non-negative values", async () => {
+      const result = await codeforces.getStudentKPIs(REAL_HANDLE);
+      expect(result.rating).toBeGreaterThanOrEqual(0);
+      expect(result.solvedTotal).toBeGreaterThanOrEqual(0);
+      expect(result.streakDays).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describeIntegration("getStudentRatingGraph - Real API", () => {
+    it("should retrieve rating graph for fisher199", async () => {
+      const result = await codeforces.getStudentRatingGraph(REAL_HANDLE);
+      expect(result).toHaveProperty("min");
+      expect(result).toHaveProperty("max");
+      expect(result).toHaveProperty("series");
+    });
+
+    it("should return properly structured series", async () => {
+      const result = await codeforces.getStudentRatingGraph(REAL_HANDLE);
+      expect(Array.isArray(result.series)).toBe(true);
+      if (result.series.length > 0) {
+        const point = result.series[0];
+        expect(point).toHaveProperty("t");
+        expect(point).toHaveProperty("rating");
+        expect(typeof point.rating).toBe("number");
+      }
+    });
+
+    it("should have consistent min/max values", async () => {
+      const result = await codeforces.getStudentRatingGraph(REAL_HANDLE);
+      expect(result.min).toBeLessThanOrEqual(result.max);
+      expect(typeof result.min).toBe("number");
+      expect(typeof result.max).toBe("number");
+    });
+
+    it("should return limited series (max 20 points)", async () => {
+      const result = await codeforces.getStudentRatingGraph(REAL_HANDLE);
+      expect(result.series.length).toBeLessThanOrEqual(20);
+    });
+  });
+
+  describeIntegration("getStudentSolvesByRating - Real API", () => {
+    it("should retrieve solves by rating for fisher199", async () => {
+      const result = await codeforces.getStudentSolvesByRating(REAL_HANDLE);
+      expect(result).toHaveProperty("binSize");
+      expect(result).toHaveProperty("bins");
+      expect(typeof result.binSize).toBe("number");
+    });
+
+    it("should return properly structured bins", async () => {
+      const result = await codeforces.getStudentSolvesByRating(REAL_HANDLE);
+      expect(Array.isArray(result.bins)).toBe(true);
+      if (result.bins.length > 0) {
+        const bin = result.bins[0];
+        expect(bin).toHaveProperty("from");
+        expect(bin).toHaveProperty("to");
+        expect(bin).toHaveProperty("label");
+        expect(bin).toHaveProperty("solved");
+        expect(typeof bin.solved).toBe("number");
+        expect(bin.solved).toBeGreaterThan(0);
+      }
+    });
+
+    it("should have correct bin ranges", async () => {
+      const result = await codeforces.getStudentSolvesByRating(REAL_HANDLE);
+      result.bins.forEach(bin => {
+        expect(bin.to).toBe(bin.from + result.binSize - 1);
+        expect(bin.from).toBeLessThanOrEqual(bin.to);
+      });
+    });
+
+    it("should only include bins with solved > 0", async () => {
+      const result = await codeforces.getStudentSolvesByRating(REAL_HANDLE);
+      result.bins.forEach(bin => {
+        expect(bin.solved).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  describeIntegration("getStudentSolvedTags - Real API", () => {
+    it("should retrieve solved tags for fisher199", async () => {
+      const result = await codeforces.getStudentSolvedTags(REAL_HANDLE);
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBeGreaterThan(0);
+    }, 10000);
+
+    it("should return properly structured tag objects", async () => {
+      const result = await codeforces.getStudentSolvedTags(REAL_HANDLE);
+      if (result.length > 0) {
+        const tag = result[0];
+        expect(tag).toHaveProperty("tag");
+        expect(tag).toHaveProperty("solved");
+        expect(typeof tag.tag).toBe("string");
+        expect(typeof tag.solved).toBe("number");
+        expect(tag.solved).toBeGreaterThan(0);
+      }
+    });
+
+    it("should return tags sorted by solved count in descending order", async () => {
+      const result = await codeforces.getStudentSolvedTags(REAL_HANDLE);
+      for (let i = 0; i < result.length - 1; i++) {
+        expect(result[i].solved).toBeGreaterThanOrEqual(result[i + 1].solved);
+      }
+    });
+
+    it("should not have duplicate tags", async () => {
+      const result = await codeforces.getStudentSolvedTags(REAL_HANDLE);
+      const tagNames = result.map(t => t.tag);
+      const uniqueTags = new Set(tagNames);
+      expect(uniqueTags.size).toBe(tagNames.length);
+    }, 10000);
+  });
+
+  describeIntegration("getRandomUnsolvedFilteredProblem - Real API", () => {
+    it("should return a problem matching filter criteria", async () => {
+      const min_rating = 1000;
+      const max_rating = 1500;
+      const tags = ["implementation"];
+      const result = await codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, min_rating, max_rating, tags);
+
+      expect(result).toHaveProperty("cf_code");
+      expect(result).toHaveProperty("name");
+      expect(result).toHaveProperty("rating");
+      expect(result).toHaveProperty("contestId");
+      expect(result).toHaveProperty("tags");
+    }, 10000);
+
+    it("should return a problem with rating within specified range", async () => {
+      const min_rating = 1200;
+      const max_rating = 1800;
+      const result = await codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, min_rating, max_rating, ["implementation"]);
+
+      expect(result.rating).toBeGreaterThanOrEqual(min_rating);
+      expect(result.rating).toBeLessThanOrEqual(max_rating);
+    }, 10000);
+
+    it("should return a problem containing all required tags", async () => {
+      const tags = ["greedy"];
+      const result = await codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, 800, 2000, tags);
+
+      expect(Array.isArray(result.tags)).toBe(true);
+      tags.forEach(tag => {
+        expect(result.tags).toContain(tag);
+      });
+    }, 10000);
+
+    it("should return cf_code in correct format", async () => {
+      const result = await codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, 1000, 1500, ["implementation"]);
+      expect(result.cf_code).toMatch(/^\d+[A-Z]/);
+    }, 10000);
+
+    it("should return a valid problem from codeforces", async () => {
+      const result = await codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, 800, 1200, ["implementation"]);
+
+      const isValid = await codeforces.validateCfCode(result.cf_code);
+      expect(isValid).toBe(true);
+    }, 10000);
+
+    it("should handle multiple tags filter", async () => {
+      const tags = ["implementation", "greedy"];
+      const result = await codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, 1000, 1500, tags);
+
+      expect(Array.isArray(result.tags)).toBe(true);
+      tags.forEach(tag => {
+        expect(result.tags).toContain(tag);
+      });
+    }, 10000);
+
+    it("should return different problems on multiple calls", async () => {
+      const calls = await Promise.all([
+        codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, 800, 1200, ["implementation"]),
+        codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, 800, 1200, ["implementation"]),
+        codeforces.getRandomUnsolvedFilteredProblem(REAL_HANDLE, 800, 1200, ["implementation"])
+      ]);
+
+      const uniqueCodes = new Set(calls.map(p => p.cf_code));
+      expect(uniqueCodes.size).toBeGreaterThan(1);
+    }, 15000);
+  });
 });
 
-/**
- * Helper function to extract contest ID and problem index
- * Duplicated from main service for test independence
- */
 function extractContestAndProblem(cfCode) {
   const match = cfCode.match(/^(\d+)([A-Z][0-9]*)$/);
   if (!match) {

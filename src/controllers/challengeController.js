@@ -1,16 +1,16 @@
 const Challenge = require("../models/Challenge");
 const User = require("../models/User");
 const CodeforcesService = require("../services/codeforces");
+const mongoose = require('mongoose');
 
 exports.createChallenge = async (req, res) => {
     try {
-        // TODO : Verify cf exercise beforehand/check for completion
         if (req.user.role === 'student' && req.params.student_id && req.param.student_id !== req.user._id) {
             return res.status(400).json({ message: 'Can\'t create challenge for other student' });
         }
         const student_id = req.params.student_id ? req.params.student_id : req.user._id;
         if (req.params.student_id) {
-            if (!student_id || !require('mongoose').Types.ObjectId.isValid(student_id)) {
+            if (!student_id || !mongoose.Types.ObjectId.isValid(student_id)) {
                 return res.status(400).json({ message: 'Invalid student_id' });
             }
             const student = await User.findById(student_id);
@@ -59,7 +59,7 @@ exports.getChallenges = async (req, res) => {
 exports.getChallengeById = async (req, res) => {
     try {
         const challengeId = req.params.id;
-        if (!challengeId || !require('mongoose').Types.ObjectId.isValid(challengeId)) {
+        if (!challengeId || !mongoose.Types.ObjectId.isValid(challengeId)) {
             return res.status(404).json({ message: 'Challenge not found' });
         }
         const challenge = await Challenge.findById(challengeId);
@@ -75,7 +75,7 @@ exports.getChallengeById = async (req, res) => {
 exports.deleteChallenge = async (req, res) => {
     try {
         const challengeId = req.params.id;
-        if (!challengeId || !require('mongoose').Types.ObjectId.isValid(challengeId)) {
+        if (!challengeId || !mongoose.Types.ObjectId.isValid(challengeId)) {
             return res.status(404).json({ message: 'Challenge not found' });
         }
         const challenge = await Challenge.findById(challengeId);
@@ -95,7 +95,7 @@ exports.deleteChallenge = async (req, res) => {
 exports.verifyChallenge = async (req, res) => {
     try {
         const challengeId = req.params.id;
-        if (!challengeId || !require('mongoose').Types.ObjectId.isValid(challengeId)) {
+        if (!challengeId || !mongoose.Types.ObjectId.isValid(challengeId)) {
             return res.status(404).json({ message: 'Challenge not found' });
         }
         const challenge = await Challenge.findById(challengeId);
@@ -115,6 +115,29 @@ exports.verifyChallenge = async (req, res) => {
         };
         const new_challenge = await Challenge.findByIdAndUpdate(challengeId, updateData, { new: true });
         res.status(200).json(new_challenge);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+exports.askChallenge = async (req, res) => {
+    try {
+        const studentId = req.user._id;
+        const { min_rating, max_rating, tags } = req.body;
+        if (min_rating && typeof min_rating !== 'number') {
+            return res.status(400).json({ message: 'Invalid min_rating' });
+        }
+        if (max_rating && typeof max_rating !== 'number') {
+            return res.status(400).json({ message: 'Invalid max_rating' });
+        }
+        if (tags && !Array.isArray(tags)) {
+            return res.status(400).json({ message: 'Invalid tags' });
+        }
+        if (min_rating && max_rating && min_rating > max_rating) {
+            return res.status(400).json({ message: 'min_rating cannot be greater than max_rating' });
+        }
+        const cf_problem = await CodeforcesService.getRandomUnsolvedFilteredProblem(req.user.cf_handle, min_rating ? min_rating : 800, max_rating ? max_rating : 3500, tags ? tags : []);
+        res.status(200).json(cf_problem);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

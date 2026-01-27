@@ -1,39 +1,9 @@
-/**
- * Codeforces API Service
- *
- * This service provides functions to interact with the Codeforces API for:
- * - Verifying if a user has solved a problem
- * - Checking if a user has submitted to a problem
- * - Determining if a problem was solved during a contest or in practice
- * - Retrieving user information and statistics
- *
- * Problem Code Format (cf_code):
- * Format: contestId + problemIndex (e.g., "123A", "1234B2", "4A")
- * - contestId: numerical ID of the contest (required)
- * - problemIndex: letter + optional iteration number (e.g., "A", "B2", "C1")
- * - Pattern: /^(\d+)([A-Z][0-9]*)$/
- *
- * Test Mode:
- * When NODE_ENV=test, all functions return mock data instead of calling the API.
- * This allows route tests to run without external API dependencies.
- */
-
 const { CodeforcesAPI } = require("codeforces-api-ts");
 
-// In test mode, don't make actual API calls (only when NODE_ENV=test, not integration)
 const IS_TEST_MODE = process.env.NODE_ENV === "test";
 
-/**
- * Verify if a user has solved a specific problem and determine completion type
- * @param {string} cfHandle - Codeforces user handle
- * @param {string} cfCode - Problem code (e.g., "123A", "1234B2")
- * @returns {Promise<{solved: boolean, completionType: "contest"|"normal"|null}>}
- *         - solved: true if problem has verdict "OK", false otherwise
- *         - completionType: "contest" if solved during contest, "normal" if solved after, null if not solved
- */
 async function verifyProblemSolved(cfHandle, cfCode) {
   if (IS_TEST_MODE) {
-    // Mock: return consistent pattern for testing
     if (cfCode === "999Z") {
       return { solved: false, completionType: null };
     }
@@ -46,7 +16,6 @@ async function verifyProblemSolved(cfHandle, cfCode) {
   try {
     const { contestId, problemIndex } = extractContestAndProblem(cfCode);
 
-    // Get contest details first to know duration
     const {status: contestStatus, result: contestStandings} = await CodeforcesAPI.call("contest.standings", {
       contestId: contestId
     });
@@ -57,7 +26,6 @@ async function verifyProblemSolved(cfHandle, cfCode) {
 
     const contest = contestStandings.contest;
 
-    // Get last 1000 submissions for performance
     const {status, result: submissions} = await CodeforcesAPI.call("user.status", {
       handle: cfHandle,
       from: 1,
@@ -68,7 +36,6 @@ async function verifyProblemSolved(cfHandle, cfCode) {
       throw new Error("Failed to fetch user submissions");
     }
 
-    // Find first successful submission for this problem
     const successfulSubmission = submissions.find(sub =>
       sub.contestId === contestId &&
       sub.problem.index === problemIndex &&
@@ -79,7 +46,6 @@ async function verifyProblemSolved(cfHandle, cfCode) {
       return { solved: false, completionType: null };
     }
 
-    // Determine if submitted during or after contest
     const isContestSubmission =
       successfulSubmission.relativeTimeSeconds >= 0 &&
       successfulSubmission.relativeTimeSeconds <= contest.durationSeconds;
@@ -95,23 +61,14 @@ async function verifyProblemSolved(cfHandle, cfCode) {
 
 const verifyProblemTimelimitSeconds = 300; // 5 minutes
 
-/**
- * Verify if a user has recently submitted to a specific problem with a compilation error
- * Scans only the last 1000 submissions for performance
- * @param {string} cfHandle - Codeforces user handle
- * @param {string} cfCode - Problem code (e.g., "123A", "1234B2")
- * @returns {Promise<boolean>} - True if any recent compilation error exists, false otherwise
- */
 async function verifyProblemCompilationErrorRecent(cfHandle, cfCode) {
   if (IS_TEST_MODE) {
-    // Mock: return consistent pattern for testing
-    return cfCode !== "888Z"; // All problems have compilation errors except 888Z
+    return cfCode !== "888Z";
   }
 
   try {
     const { contestId, problemIndex } = extractContestAndProblem(cfCode);
 
-    // Get last 10 submissions for performance
     const {status, result: submissions} = await CodeforcesAPI.call("user.status", {
       handle: cfHandle,
       from: 1,
@@ -136,14 +93,8 @@ async function verifyProblemCompilationErrorRecent(cfHandle, cfCode) {
 
 
 
-/**
- * Validate if a cf_code is valid on Codeforces
- * @param {string} cfCode - Problem code (e.g., "123A", "1234B2")
- * @returns {Promise<boolean>} - True if problem exists on Codeforces, false otherwise
- */
 async function validateCfCode(cfCode) {
   if (IS_TEST_MODE) {
-    // Mock: validate format and return true for all except 999Z
     try {
       extractContestAndProblem(cfCode);
       return cfCode !== "999Z";
@@ -165,18 +116,12 @@ async function validateCfCode(cfCode) {
 
     return problemExists;
   } catch (error) {
-    return false; // Return false for any error (invalid format, API error, etc.)
+    return false;
   }
 }
 
-/**
- * Get information about a problem code
- * @param {string} cfCode - Problem code (e.g., "123A", "1234B2")
- * @returns {Promise<{exists: boolean, problem?: object, contestId?: number, problemIndex?: string}>}
- */
 async function getProblemInfo(cfCode) {
   if (IS_TEST_MODE) {
-    // Mock: return problem info for known test codes
     const { contestId, problemIndex } = extractContestAndProblem(cfCode);
     return {
       exists: cfCode !== "999Z",
@@ -223,14 +168,8 @@ async function getProblemInfo(cfCode) {
   }
 }
 
-/**
- * Get user information and statistics
- * @param {string} cfHandle - Codeforces user handle
- * @returns {Promise<object|null>} - User info or null if not found
- */
 async function getUserInfo(cfHandle) {
   if (IS_TEST_MODE) {
-    // Mock: return consistent user data for testing
     return {
       handle: cfHandle,
       rating: 1500,
@@ -256,14 +195,8 @@ async function getUserInfo(cfHandle) {
   }
 }
 
-/**
- * Verify if a Codeforces account exists
- * @param {string} cfHandle - Codeforces user handle
- * @returns {Promise<boolean>} - True if account exists, false otherwise
- */
 async function verifyExistingCodeforcesAccount(cfHandle) {
   if (IS_TEST_MODE) {
-    // Mock: return true for all handles except "nonexistent"
     return cfHandle !== "nonexistent";
   }
 
@@ -277,17 +210,12 @@ async function verifyExistingCodeforcesAccount(cfHandle) {
 
     return users.length > 0;
   } catch (error) {
-    return false; // Return false for any error (invalid handle, API error, etc.)
+    return false;
   }
 }
 
-/**
- * Get a random valid Codeforces problem for verification
- * @returns {Promise<{cf_code: string, name: string, rating?: number, contestId?: number}>}
- */
 async function getRandomValidProblem() {
   if (IS_TEST_MODE) {
-    // Mock: return a fixed problem for testing
     return {
       cf_code: "4A",
       name: "Watermelon",
@@ -321,16 +249,61 @@ async function getRandomValidProblem() {
   }
 }
 
-/**
- * Get paginated user submissions
- * @param {string} cfHandle - Codeforces user handle
- * @param {number} from - Starting index (1-based)
- * @param {number} count - Number of submissions to fetch
- * @returns {Promise<array>} - Array of submissions
- */
+async function getRandomUnsolvedFilteredProblem(cf_handle, min_rating, max_rating, tags) {
+  if (IS_TEST_MODE) {
+    return {
+      cf_code: "4A",
+      name: "Watermelon",
+      rating: min_rating,
+      contestId: 4,
+      tags: tags
+    };
+  }
+
+  try {
+    const {status, result: problems} = await CodeforcesAPI.call("problemset.problems", {});
+    if (status !== "OK") {
+      throw new Error("Failed to fetch problems from Codeforces");
+    }
+    const problemsList = (problems.problems || [])
+      .map(value => ({ value, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ value }) => value);
+
+    if (problemsList.length === 0) {
+      throw new Error("No problems available from Codeforces API");
+    }
+
+    for (const problem of problemsList) {
+      if (!problem.rating) continue;
+      if (problem.rating < min_rating || problem.rating > max_rating) continue;
+
+      if (!problem.tags) continue;
+      const problemTags = problem.tags;
+      if (!tags.every(tag => problemTags.includes(tag))) continue;
+
+      const cf_code = `${problem.contestId}${problem.index}`;
+      const {solved} = await verifyProblemSolved(cf_handle, cf_code);
+      if (!solved) {
+        return {
+            cf_code: `${problem.contestId}${problem.index}`,
+            name: problem.name,
+            rating: problem.rating,
+            contestId: problem.contestId,
+            tags: problem.tags
+          };
+      }
+    }
+
+    throw new Error("No problems matching the filter criteria");
+
+  } catch (error) {
+    throw new Error(`Failed to get random problem: ${error.message}`);
+  }
+}
+
 async function getUserSubmissions(cfHandle, from = 1, count = 50) {
   if (IS_TEST_MODE) {
-    // Mock: return sample submissions
     return [
       {
         id: 1,
@@ -363,17 +336,7 @@ async function getUserSubmissions(cfHandle, from = 1, count = 50) {
   }
 }
 
-// ============= Helper Functions =============
-
-/**
- * Parse cf_code to extract contestId and problemIndex
- * Format: contestId + problemIndex (e.g., "123A", "1234B2")
- * @param {string} cfCode
- * @returns {{contestId: number, problemIndex: string}}
- * @throws Error if format is invalid
- */
 function extractContestAndProblem(cfCode) {
-  // Match pattern: digits followed by letters/digits (e.g., "123A", "1234B2", "4A1")
   const match = cfCode.match(/^(\d+)([A-Z][0-9]*)$/);
 
   if (!match) {
@@ -388,7 +351,196 @@ function extractContestAndProblem(cfCode) {
   };
 }
 
-// ============= Exports =============
+async function getStudentKPIs(cfHandle) {
+  if (IS_TEST_MODE) {
+    return {
+      rating: 1243,
+      solvedTotal: 1243,
+      streakDays: 6
+    };
+  }
+
+  try {
+    const userInfo = await getUserInfo(cfHandle);
+    if (!userInfo) {
+      throw new Error(`User ${cfHandle} not found`);
+    }
+
+    const submissions = await getUserSubmissions(cfHandle, 1, 10000);
+    const solvedProblems = new Set();
+    submissions.forEach(sub => {
+      if (sub.verdict === "OK") {
+        solvedProblems.add(`${sub.problem.contestId}${sub.problem.index}`);
+      }
+    });
+
+    const streakDays = submissions.length > 0 ? 1 : 0;
+
+    return {
+      rating: userInfo.rating || 0,
+      solvedTotal: solvedProblems.size,
+      streakDays: streakDays
+    };
+  } catch (error) {
+    throw new Error(`Failed to get student KPIs: ${error.message}`);
+  }
+}
+
+async function getStudentRatingGraph(cfHandle) {
+  if (IS_TEST_MODE) {
+    return {
+      min: 820,
+      max: 1243,
+      series: [
+        { t: "2025-08-01", rating: 820 },
+        { t: "2025-12-20", rating: 930 },
+        { t: "2026-01-20", rating: 1100 }
+      ]
+    };
+  }
+
+  try {
+    const submissions = await getUserSubmissions(cfHandle, 1, 10000);
+    
+    const ratingChanges = [];
+    const seenRatings = new Set();
+
+    submissions.forEach(sub => {
+      if (sub.author && sub.author.rating !== undefined && !seenRatings.has(sub.author.rating)) {
+        const date = new Date(sub.creationTimeSeconds * 1000);
+        ratingChanges.push({
+          t: date.toISOString().split('T')[0],
+          rating: sub.author.rating
+        });
+        seenRatings.add(sub.author.rating);
+      }
+    });
+
+    const ratings = ratingChanges.map(rc => rc.rating);
+    const min = ratings.length > 0 ? Math.min(...ratings) : 0;
+    const max = ratings.length > 0 ? Math.max(...ratings) : 0;
+
+    return {
+      min: min,
+      max: max,
+      series: ratingChanges.slice(0, 20) 
+    };
+  } catch (error) {
+    throw new Error(`Failed to get student rating graph: ${error.message}`);
+  }
+}
+
+async function getStudentSolvesByRating(cfHandle) {
+  if (IS_TEST_MODE) {
+    return {
+      binSize: 100,
+      bins: [
+        { from: 800, to: 899, label: "800", solved: 300 },
+        { from: 900, to: 999, label: "900", solved: 130 },
+        { from: 1000, to: 1099, label: "1000", solved: 160 },
+        { from: 1100, to: 1199, label: "1100", solved: 60 },
+        { from: 1200, to: 1299, label: "1200", solved: 100 }
+      ]
+    };
+  }
+
+  try {
+    const { status, result: problems } = await CodeforcesAPI.call("problemset.problems", {});
+    if (status !== "OK") {
+      throw new Error("Failed to fetch problems");
+    }
+
+    const submissions = await getUserSubmissions(cfHandle, 1, 10000);
+    const solvedProblems = new Set();
+
+    submissions.forEach(sub => {
+      if (sub.verdict === "OK") {
+        solvedProblems.add(`${sub.problem.contestId}${sub.problem.index}`);
+      }
+    });
+
+    const bins = {};
+    const binSize = 100;
+
+    for (let rating = 800; rating <= 3500; rating += binSize) {
+      bins[rating] = 0;
+    }
+
+    problems.problems.forEach(prob => {
+      if (prob.rating && solvedProblems.has(`${prob.contestId}${prob.index}`)) {
+        const binKey = Math.floor(prob.rating / binSize) * binSize;
+        if (bins[binKey] !== undefined) {
+          bins[binKey]++;
+        }
+      }
+    });
+
+    const binsArray = Object.entries(bins)
+      .filter(([key, value]) => value > 0)
+      .map(([from, solved]) => ({
+        from: parseInt(from),
+        to: parseInt(from) + binSize - 1,
+        label: from,
+        solved: solved
+      }));
+
+    return {
+      binSize: binSize,
+      bins: binsArray
+    };
+  } catch (error) {
+    throw new Error(`Failed to get student solves by rating: ${error.message}`);
+  }
+}
+
+async function getStudentSolvedTags(cfHandle) {
+  if (IS_TEST_MODE) {
+    return [
+      { tag: "implementation", solved: 453 },
+      { tag: "binary search", solved: 420 },
+      { tag: "greedy", solved: 524 },
+      { tag: "math", solved: 32 },
+      { tag: "graphs", solved: 532 }
+    ];
+  }
+
+  try {
+    const { status, result: problems } = await CodeforcesAPI.call("problemset.problems", {});
+    if (status !== "OK") {
+      throw new Error("Failed to fetch problems");
+    }
+
+    const submissions = await getUserSubmissions(cfHandle, 1, 10000);
+    const solvedProblems = new Set();
+
+    submissions.forEach(sub => {
+      if (sub.verdict === "OK") {
+        solvedProblems.add(`${sub.problem.contestId}${sub.problem.index}`);
+      }
+    });
+
+    const tagCount = {};
+
+    problems.problems.forEach(prob => {
+      if (solvedProblems.has(`${prob.contestId}${prob.index}`)) {
+        prob.tags?.forEach(tag => {
+          tagCount[tag] = (tagCount[tag] || 0) + 1;
+        });
+      }
+    });
+
+    const tagsArray = Object.entries(tagCount)
+      .map(([tag, solved]) => ({
+        tag: tag,
+        solved: solved
+      }))
+      .sort((a, b) => b.solved - a.solved);
+
+    return tagsArray;
+  } catch (error) {
+    throw new Error(`Failed to get student solved tags: ${error.message}`);
+  }
+}
 
 module.exports = {
   verifyProblemSolved,
@@ -399,5 +551,10 @@ module.exports = {
   getUserInfo,
   getRandomValidProblem,
   getUserSubmissions,
-  verifyProblemTimelimitSeconds
+  verifyProblemTimelimitSeconds,
+  getStudentKPIs,
+  getStudentRatingGraph,
+  getStudentSolvesByRating,
+  getStudentSolvedTags,
+  getRandomUnsolvedFilteredProblem
 };

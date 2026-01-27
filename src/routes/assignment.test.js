@@ -19,7 +19,6 @@ describe('Assignment API', () => {
     const createAndLoginUser = async ({ username, password, role }) => {
         const user = await User.create({ username, password_hash: password, email: `${username}@test.com`, role });
         
-        // Create CFAccount for students so they have cf_handle in JWT
         if (role === "student") {
             await CFAccount.create({ student_id: user._id, cf_account: `${username}_cf`, is_verified_flag: true });
         }
