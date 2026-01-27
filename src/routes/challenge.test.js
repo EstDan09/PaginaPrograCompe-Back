@@ -107,7 +107,7 @@ describe("Challenge API", () => {
                 .set("Authorization", `Bearer ${studentToken}`)
                 .send({ cf_code: "123A" });
 
-            expect(res.statusCode).toBe(500);
+            expect(res.statusCode).toBe(400);
         });
 
         it("rejects missing cf_code", async () => {

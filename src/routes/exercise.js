@@ -13,7 +13,7 @@ module.exports = (app) => {
      *     tags:
      *       - Exercises
      *     summary: Create exercise
-     *     description: Creates a new exercise within an assignment. Only coaches/admins can create exercises.
+     *     description: Creates a new exercise within an assignment. Authentication Admin/Coach
      *     security:
      *       - BearerAuth: []
      *     requestBody:
@@ -42,24 +42,15 @@ module.exports = (app) => {
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               properties:
-     *                 _id:
-     *                   type: string
-     *                 name:
-     *                   type: string
-     *                 cf_code:
-     *                   type: string
-     *                 parent_assignment:
-     *                   type: string
+     *               $ref: '#/components/schemas/Exercise'
      *       '400':
-     *         description: Bad request - Invalid assignment or missing fields
+     *         description: Bad request
      *         content:
      *           application/json:
      *             schema:
      *               $ref: '#/components/schemas/Error'
      *       '403':
-     *         description: Forbidden - Only coaches/admins can create
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -80,7 +71,7 @@ module.exports = (app) => {
      *     tags:
      *       - Exercises
      *     summary: Get exercises by filters
-     *     description: Retrieves exercises matching optional filter criteria. All filters are optional.
+     *     description: Retrieves exercises matching optional filter criteria. All filters are optional. Authentication Basic
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -107,18 +98,9 @@ module.exports = (app) => {
      *             schema:
      *               type: array
      *               items:
-     *                 type: object
-     *                 properties:
-     *                   _id:
-     *                     type: string
-     *                   name:
-     *                     type: string
-     *                   cf_code:
-     *                     type: string
-     *                   parent_assignment:
-     *                     type: string
-     *       '400':
-     *         description: Invalid query parameters
+     *                 $ref: '#/components/schemas/Exercise'
+     *       '403':
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -139,7 +121,7 @@ module.exports = (app) => {
      *     tags:
      *       - Exercises
      *     summary: Get exercise by ID
-     *     description: Retrieves a specific exercise by its ID.
+     *     description: Retrieves a specific exercise by its ID. Authentication Basic
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -155,16 +137,13 @@ module.exports = (app) => {
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               properties:
-     *                 _id:
-     *                   type: string
-     *                 name:
-     *                   type: string
-     *                 cf_code:
-     *                   type: string
-     *                 parent_assignment:
-     *                   type: string
+     *               $ref: '#/components/schemas/Exercise'
+     *       '403':
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       '404':
      *         description: Exercise not found
      *         content:
@@ -187,7 +166,7 @@ module.exports = (app) => {
      *     tags:
      *       - Exercises
      *     summary: Update exercise
-     *     description: Updates an existing exercise. Only coaches/admins can update exercises.
+     *     description: Updates an existing exercise. Authentication Admin/Coach
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -213,18 +192,9 @@ module.exports = (app) => {
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               properties:
-     *                 _id:
-     *                   type: string
-     *                 name:
-     *                   type: string
-     *                 cf_code:
-     *                   type: string
-     *                 parent_assignment:
-     *                   type: string
+     *               $ref: '#/components/schemas/Exercise'
      *       '403':
-     *         description: Forbidden - Only coaches/admins can update
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -251,7 +221,7 @@ module.exports = (app) => {
      *     tags:
      *       - Exercises
      *     summary: Delete exercise
-     *     description: Deletes an exercise. Only coaches/admins can delete exercises. Associated student-exercise links may also be deleted.
+     *     description: Deletes an exercise. Associated student-exercise links may also be deleted. Authentication Admin/Coach
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -264,15 +234,8 @@ module.exports = (app) => {
      *     responses:
      *       '200':
      *         description: Exercise deleted successfully
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 message:
-     *                   type: string
      *       '403':
-     *         description: Forbidden - Only coaches/admins can delete
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:

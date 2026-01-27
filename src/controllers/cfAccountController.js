@@ -1,5 +1,4 @@
 const CFAccount = require("../models/CFAccount");
-const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const CodeforcesService = require("../services/codeforces");
 

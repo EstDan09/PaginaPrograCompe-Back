@@ -31,7 +31,6 @@ exports.sendDirectMessage = async (req, res) => {
 exports.getConversations = async (req, res) => {
     try {
         const userId = req.user._id;
-        // Get conversation partners sorted by latest message timestamp
         const messages = await DirectMessage.find({ 
             $or: [
                 { sender_id: userId },

@@ -9,7 +9,7 @@ module.exports = (app) => {
      *     tags:
      *       - Authentication
      *     summary: Login user with credentials
-     *     description: Authenticates a user with username and password, returning a JWT token for subsequent requests.
+     *     description: Authenticates a user with username and password, returning a JWT token for subsequent requests. Authentication N/A
      *     requestBody:
      *       required: true
      *       content:
@@ -38,13 +38,7 @@ module.exports = (app) => {
      *                   type: string
      *                   description: JWT token for authentication
      *       '400':
-     *         description: Bad request - Missing username or password
-     *         content:
-     *           application/json:
-     *             schema:
-     *               $ref: '#/components/schemas/Error'
-     *       '401':
-     *         description: Unauthorized - Invalid credentials
+     *         description: Invalid username or password
      *         content:
      *           application/json:
      *             schema:
@@ -65,7 +59,7 @@ module.exports = (app) => {
      *     tags:
      *       - Authentication
      *     summary: Register new user account
-     *     description: Creates a new user account. Students can optionally provide a CodeForces account handle. Coaches and admins cannot be registered through this endpoint.
+     *     description: Creates a new user account. Students can optionally provide a CodeForces account handle. Admins cannot be registered through this endpoint. Authentication N/A
      *     requestBody:
      *       required: true
      *       content:
@@ -126,7 +120,7 @@ module.exports = (app) => {
      *     tags:
      *       - Authentication
      *     summary: Refresh expired JWT token
-     *     description: Generates a new JWT token using the current authentication session. Use this when the current token is about to expire.
+     *     description: Generates a new JWT token using the current authentication session. Use this when the current token is about to expire. Authentication Basic
      *     security:
      *       - BearerAuth: []
      *     responses:
@@ -142,6 +136,12 @@ module.exports = (app) => {
      *                   description: New JWT token
      *       '401':
      *         description: Unauthorized - Invalid or missing token
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       403:
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:

@@ -1,5 +1,3 @@
-// TODO: fix
-
 const StudentExerciseController = require("../controllers/studentExerciseController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const adminMiddleware = require("../middlewares/adminMiddleware");
@@ -17,7 +15,7 @@ module.exports = (app) => {
      *     tags:
      *       - Student Exercises
      *     summary: Create student-exercise link
-     *     description: Creates a link between authenticated student and an exercise
+     *     description: Creates a link between authenticated student and an exercise. Authentication Student
      *     security:
      *       - BearerAuth: []
      *     requestBody:
@@ -33,14 +31,28 @@ module.exports = (app) => {
      *     responses:
      *       201:
      *         description: Link created
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/StudentExercise'
      *       400:
      *         description: Bad request
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       403:
-     *         description: Forbidden - Students only
-     *       404:
-     *         description: Exercise not found
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.post("/student-exercise/create", fstudent_ops, StudentExerciseController.createStudentExercise);
 
@@ -51,7 +63,7 @@ module.exports = (app) => {
      *     tags:
      *       - Student Exercises
      *     summary: Create student-exercise link (admin)
-     *     description: Creates a link for specific student (admin only)
+     *     description: Creates a link for specific student. Authentication Admin
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -73,14 +85,28 @@ module.exports = (app) => {
      *     responses:
      *       201:
      *         description: Link created
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/StudentExercise'
      *       400:
      *         description: Bad request
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       403:
-     *         description: Forbidden - Admins only
-     *       404:
-     *         description: Student or exercise not found
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.post("/student-exercise/create/:student_id", admin_ops, StudentExerciseController.createStudentExercise);
 
@@ -91,7 +117,7 @@ module.exports = (app) => {
      *     tags:
      *       - Student Exercises
      *     summary: Get student-exercise links
-     *     description: Retrieves links matching filter criteria
+     *     description: Retrieves links matching filter criteria. Authentication Basic
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -118,10 +144,30 @@ module.exports = (app) => {
      *     responses:
      *       200:
      *         description: Array of student-exercise links
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 $ref: '#/components/schemas/StudentExercise'
      *       400:
      *         description: Bad request
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       403:
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.get("/student-exercise/get", normal_ops, StudentExerciseController.getStudentExercises);
 
@@ -132,7 +178,7 @@ module.exports = (app) => {
      *     tags:
      *       - Student Exercises
      *     summary: Get student-exercise link by ID
-     *     description: Retrieves a specific link (admin only)
+     *     description: Retrieves a specific link. Authentication Admin
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -144,12 +190,28 @@ module.exports = (app) => {
      *     responses:
      *       200:
      *         description: Link found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/StudentExercise'
      *       403:
-     *         description: Forbidden - Admins only
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       404:
      *         description: Link not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.get("/student-exercise/get/:id", admin_ops, StudentExerciseController.getStudentExerciseById);
 
@@ -160,7 +222,7 @@ module.exports = (app) => {
      *     tags:
      *       - Student Exercises
      *     summary: Delete student-exercise link
-     *     description: Removes link between student and exercise
+     *     description: Removes link between student and exercise. Authentication Admin
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -173,11 +235,23 @@ module.exports = (app) => {
      *       200:
      *         description: Link deleted
      *       403:
-     *         description: Forbidden - Admins only
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       404:
      *         description: Link not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.delete("/student-exercise/delete/:id", admin_ops, StudentExerciseController.deleteStudentExercise);
 }

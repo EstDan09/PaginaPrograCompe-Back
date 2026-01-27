@@ -112,8 +112,8 @@ exports.useGroupInviteCode = async (req, res) => {
         if (existingMembership) {
             return res.status(400).json({ message: 'You are already a member of this group' });
         }
-        await StudentGroup.create({ student_id: req.user._id, group_id: group._id });
-        res.status(200).json({ message: 'Successfully joined the group' });
+        const newStudentGroup = await StudentGroup.create({ student_id: req.user._id, group_id: group._id });
+        res.status(201).json(newStudentGroup);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });

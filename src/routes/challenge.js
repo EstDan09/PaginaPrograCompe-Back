@@ -1,4 +1,3 @@
-// TODO: fix
 const ChallengeController = require("../controllers/challengeController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const adminMiddleware = require("../middlewares/adminMiddleware");
@@ -18,7 +17,7 @@ module.exports = (app) => {
      *     tags:
      *       - Challenges
      *     summary: Create challenge
-     *     description: Creates a new challenge for the authenticated student
+     *     description: Creates a new challenge for the authenticated student. Authentication Student
      *     security:
      *       - BearerAuth: []
      *     requestBody:
@@ -35,12 +34,28 @@ module.exports = (app) => {
      *     responses:
      *       201:
      *         description: Challenge created successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Challenge'
      *       400:
-     *         description: Bad request - invalid cf_code
+     *         description: Bad request
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       403:
-     *         description: Forbidden - Only students can create
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.post("/challenge/create", fstudent_ops, ChallengeController.createChallenge);
 
@@ -51,7 +66,7 @@ module.exports = (app) => {
      *     tags:
      *       - Challenges
      *     summary: Create challenge for student (admin)
-     *     description: Creates a new challenge for a specific student (admin only)
+     *     description: Creates a new challenge for a specific student. Authentication Admin
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -73,12 +88,28 @@ module.exports = (app) => {
      *     responses:
      *       201:
      *         description: Challenge created
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Challenge'
      *       400:
      *         description: Bad request
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       403:
-     *         description: Forbidden - Admins only
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.post("/challenge/create/:student_id", admin_ops, ChallengeController.createChallenge);
 
@@ -89,7 +120,7 @@ module.exports = (app) => {
      *     tags:
      *       - Challenges
      *     summary: Get challenges with filters
-     *     description: Retrieves challenges matching optional criteria. Students see only their own.
+     *     description: Retrieves challenges matching optional criteria. Students see only their own. Authentication Admin/Student
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -112,10 +143,24 @@ module.exports = (app) => {
      *     responses:
      *       200:
      *         description: Array of challenges
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 $ref: '#/components/schemas/Challenge'
      *       403:
      *         description: Forbidden
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.get("/challenge/get", student_ops, ChallengeController.getChallenges);
 
@@ -126,7 +171,7 @@ module.exports = (app) => {
      *     tags:
      *       - Challenges
      *     summary: Get challenge by ID
-     *     description: Retrieves a specific challenge by ID (admin only)
+     *     description: Retrieves a specific challenge by ID. Authentication Admin
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -138,12 +183,28 @@ module.exports = (app) => {
      *     responses:
      *       200:
      *         description: Challenge found
-     *       403:
-     *         description: Forbidden - Admins only
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Challenge'
      *       404:
      *         description: Challenge not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       403:
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.get("/challenge/get/:id", admin_ops, ChallengeController.getChallengeById);
 
@@ -154,7 +215,7 @@ module.exports = (app) => {
      *     tags:
      *       - Challenges
      *     summary: Delete challenge
-     *     description: Deletes a challenge. Students can only delete their own.
+     *     description: Deletes a challenge. Students can only delete their own. Authentication Admin/Student
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -166,12 +227,30 @@ module.exports = (app) => {
      *     responses:
      *       200:
      *         description: Challenge deleted
-     *       403:
-     *         description: Forbidden
+     *       400:
+     *         description: Bad request
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       404:
      *         description: Challenge not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       403:
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.delete("/challenge/delete/:id", student_ops, ChallengeController.deleteChallenge);
 
@@ -182,7 +261,7 @@ module.exports = (app) => {
      *     tags:
      *       - Challenges
      *     summary: Verify challenge completion
-     *     description: Marks a challenge as completed
+     *     description: Marks a challenge as completed. Authentication Admin/Student
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -202,14 +281,34 @@ module.exports = (app) => {
      *     responses:
      *       200:
      *         description: Challenge verified
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Challenge'
      *       400:
      *         description: Verification failed
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       403:
-     *         description: Forbidden
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       404:
      *         description: Challenge not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.put("/challenge/verify/:id", student_ops, ChallengeController.verifyChallenge);
 
@@ -220,7 +319,7 @@ module.exports = (app) => {
      *     tags:
      *       - Challenges
      *     summary: Get random challenge problem
-     *     description: Returns a random CodeForces problem matching criteria
+     *     description: Returns a random CodeForces problem matching criteria. Authentication Student
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -239,12 +338,41 @@ module.exports = (app) => {
      *     responses:
      *       200:
      *         description: Challenge problem found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 cf_code:
+     *                  type: string
+     *                 name:
+     *                   type: string
+     *                 rating:
+     *                   type: number
+     *                 contestId:
+     *                   type: number
+     *                 tags:
+     *                   type: array
+     *                   items:
+     *                     type: string
+     *       400:
+     *         description: Bad request
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       403:
-     *         description: Forbidden
-     *       404:
-     *         description: No matching problem found
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.get("/challenge/ask", fstudent_ops, ChallengeController.askChallenge);
 }

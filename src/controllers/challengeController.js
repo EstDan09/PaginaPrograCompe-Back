@@ -25,6 +25,9 @@ exports.createChallenge = async (req, res) => {
         if (!(await CodeforcesService.validateCfCode(cf_code))) {
             return res.status(400).json({ message: 'Invalid cf_code' });
         }
+        if (await Challenge.findOne({ student_id, cf_code })) {
+            return res.status(400).json({ message: 'Challenge already exists for this student and problem' });
+        }
         const challenge = await Challenge.create({
             student_id,
             cf_code
@@ -127,7 +130,6 @@ exports.verifyChallenge = async (req, res) => {
 
 exports.askChallenge = async (req, res) => {
     try {
-        const studentId = req.user._id;
         const { min_rating, max_rating, tags } = req.body;
         if (min_rating && typeof min_rating !== 'number') {
             return res.status(400).json({ message: 'Invalid min_rating' });

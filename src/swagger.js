@@ -1,91 +1,31 @@
-const swaggerJSDoc = require('swagger-jsdoc');
-const path = require('path');
-
-const swaggerDefinition = {
-  openapi: '3.0.0',
-  info: {
-    title: 'Página de Programación Competitiva API',
-    version: '1.0.0',
-    description: 'Backend API for competitive programming platform',
-    contact: {
-      name: 'Development Team',
-    },
-  },
-  servers: [
-    {
-      url: process.env.API_URL || 'http://localhost:3000',
-      description: process.env.NODE_ENV === 'production' ? 'Production Server' : 'Development Server',
-    },
-  ],
-  components: {
-    securitySchemes: {
-      BearerAuth: {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        description: 'JWT token for authentication. Include in Authorization header as: Bearer <token>',
-      },
-    },
-    schemas: {
-      Error: {
-        type: 'object',
-        properties: {
-          message: {
-            type: 'string',
-            description: 'Error message',
-          },
-        },
-      },
-    },
-  },
-  security: [
-    {
-      BearerAuth: [],
-    },
-  ],
-  tags: [
-    {
-      name: 'Authentication',
-      description: 'User authentication endpoints',
-    },
-    {
-      name: 'Users',
-      description: 'User management endpoints',
-    },
-    {
-      name: 'Groups',
-      description: 'Study group management',
-    },
-    {
-      name: 'Challenges',
-      description: 'Challenge and problem endpoints',
-    },
-    {
-      name: 'Exercises',
-      description: 'Exercise management',
-    },
-    {
-      name: 'Following',
-      description: 'Student following relationships',
-    },
-    {
-      name: 'Direct Messages',
-      description: 'Direct messaging between users',
-    },
-    {
-      name: 'Statistics',
-      description: 'User statistics and analytics',
-    },
-  ],
-};
+const swaggerJsdoc = require("swagger-jsdoc");
 
 const options = {
-  definition: swaggerDefinition,
-  apis: [
-    path.join(__dirname, './routes/*.js'),
-  ],
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Backend API Documentation",
+      version: "1.0.0",
+      description: "CFTrainer",
+    },
+    components: {
+        securitySchemes: {
+        BearerAuth: {
+            type: "http",
+            scheme: "bearer",
+            bearerFormat: "JWT",
+        },
+        },
+    },
+    servers: [
+      {
+        url: "http://localhost:3000",
+      },
+    ],
+  },
+  apis: ["./src/routes/*.js", "./src/app.js"],
 };
 
-const swaggerSpec = swaggerJSDoc(options);
+const swaggerSpec = swaggerJsdoc(options);
 
 module.exports = swaggerSpec;

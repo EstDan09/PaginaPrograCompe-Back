@@ -13,7 +13,7 @@ module.exports = (app) => {
      *     tags:
      *       - Assignments
      *     summary: Create assignment
-     *     description: Creates a new assignment within a group. Only coaches/admins can create assignments.
+     *     description: Creates a new assignment within a group. Authentication Admin/Coach
      *     security:
      *       - BearerAuth: []
      *     requestBody:
@@ -46,27 +46,15 @@ module.exports = (app) => {
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               properties:
-     *                 _id:
-     *                   type: string
-     *                 title:
-     *                   type: string
-     *                 description:
-     *                   type: string
-     *                 due_date:
-     *                   type: string
-     *                   format: date-time
-     *                 parent_group:
-     *                   type: string
+     *               $ref: '#/components/schemas/Assignment'
      *       '400':
      *         description: Bad request - Invalid group ID or missing required fields
      *         content:
      *           application/json:
      *             schema:
      *               $ref: '#/components/schemas/Error'
-     *       '403':
-     *         description: Forbidden - Only coaches/admins can create assignments
+     *       403:
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -87,7 +75,7 @@ module.exports = (app) => {
      *     tags:
      *       - Assignments
      *     summary: Get assignments by filters
-     *     description: Retrieves assignments matching optional filter criteria. All filters are optional and can be combined.
+     *     description: Retrieves assignments matching optional filter criteria. All filters are optional and can be combined. Authentication Basic
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -120,21 +108,9 @@ module.exports = (app) => {
      *             schema:
      *               type: array
      *               items:
-     *                 type: object
-     *                 properties:
-     *                   _id:
-     *                     type: string
-     *                   title:
-     *                     type: string
-     *                   description:
-     *                     type: string
-     *                   due_date:
-     *                     type: string
-     *                     format: date-time
-     *                   parent_group:
-     *                     type: string
-     *       '400':
-     *         description: Invalid query parameters
+     *                 $ref: '#/components/schemas/Assignment'
+     *       '403':
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -155,7 +131,7 @@ module.exports = (app) => {
      *     tags:
      *       - Assignments
      *     summary: Get assignment by ID
-     *     description: Retrieves a specific assignment by its ID.
+     *     description: Retrieves a specific assignment by its ID. Authentication Basic
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -171,21 +147,15 @@ module.exports = (app) => {
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               properties:
-     *                 _id:
-     *                   type: string
-     *                 title:
-     *                   type: string
-     *                 description:
-     *                   type: string
-     *                 due_date:
-     *                   type: string
-     *                   format: date-time
-     *                 parent_group:
-     *                   type: string
+     *               $ref: '#/components/schemas/Assignment'
      *       '404':
      *         description: Assignment not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '403':
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -206,7 +176,7 @@ module.exports = (app) => {
      *     tags:
      *       - Assignments
      *     summary: Update assignment
-     *     description: Updates an existing assignment. Only coaches/admins can update assignments.
+     *     description: Updates an existing assignment. Authentication Admin/Coach
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -239,19 +209,7 @@ module.exports = (app) => {
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               properties:
-     *                 _id:
-     *                   type: string
-     *                 title:
-     *                   type: string
-     *                 description:
-     *                   type: string
-     *                 due_date:
-     *                   type: string
-     *                   format: date-time
-     *                 parent_group:
-     *                   type: string
+     *               $ref: '#/components/schemas/Assignment'
      *       '404':
      *         description: Assignment not found
      *         content:
@@ -259,7 +217,7 @@ module.exports = (app) => {
      *             schema:
      *               $ref: '#/components/schemas/Error'
      *       '403':
-     *         description: Forbidden - Only coaches/admins can update
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -280,7 +238,7 @@ module.exports = (app) => {
      *     tags:
      *       - Assignments
      *     summary: Delete assignment
-     *     description: Deletes an assignment and all associated student exercises. Only coaches/admins can delete.
+     *     description: Deletes an assignment and all associated student exercises. Authentication Admin/Coach
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -293,13 +251,6 @@ module.exports = (app) => {
      *     responses:
      *       '200':
      *         description: Assignment deleted successfully
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 message:
-     *                   type: string
      *       '404':
      *         description: Assignment not found
      *         content:
@@ -307,7 +258,7 @@ module.exports = (app) => {
      *             schema:
      *               $ref: '#/components/schemas/Error'
      *       '403':
-     *         description: Forbidden - Only coaches/admins can delete
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:

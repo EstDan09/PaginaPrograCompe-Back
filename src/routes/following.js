@@ -17,7 +17,7 @@ module.exports = (app) => {
      *     tags:
      *       - Following
      *     summary: Create following relationship between two students
-     *     description: Creates a following relationship where student_1 follows student_2. Admins can create followings for any student, but students can only create followings for themselves. Users cannot follow themselves.
+     *     description: Creates a following relationship where student_1 follows student_2. Admins can create followings for any student, but students can only create followings for themselves. Users cannot follow themselves. Authentication Admin/Student
      *     security:
      *       - BearerAuth: []
      *     requestBody:
@@ -41,25 +41,15 @@ module.exports = (app) => {
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               properties:
-     *                 _id:
-     *                   type: string
-     *                   description: Following relationship ID
-     *                 student_1_id:
-     *                   type: string
-     *                   description: ID of follower
-     *                 student_2_id:
-     *                   type: string
-     *                   description: ID of followed user
+     *               $ref: '#/components/schemas/Following'
      *       '400':
      *         description: Bad request
      *         content:
      *           application/json:
      *             schema:
      *               $ref: '#/components/schemas/Error'
-     *       '403':
-     *         description: Forbidden - Authentication error or insufficient permissions
+     *       403:
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -80,7 +70,7 @@ module.exports = (app) => {
      *     tags:
      *       - Following
      *     summary: Get followings by student IDs
-     *     description: Retrieves following relationships filtered by student IDs. Students can only view their own followings (as student_1_id). Admins can view all followings with any filter combination.
+     *     description: Retrieves following relationships filtered by student IDs. Students can only view their own followings (as student_1_id). Admins can view all followings with any filter combination. Authentication Admin/Student
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -102,16 +92,9 @@ module.exports = (app) => {
      *             schema:
      *               type: array
      *               items:
-     *                 type: object
-     *                 properties:
-     *                   _id:
-     *                     type: string
-     *                   student_1_id:
-     *                     type: string
-     *                   student_2_id:
-     *                     type: string
+     *                 $ref: '#/components/schemas/Following'
      *       '403':
-     *         description: Forbidden - Students cannot filter by student_1_id
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -132,7 +115,7 @@ module.exports = (app) => {
      *     tags:
      *       - Following
      *     summary: Get following relationship by ID
-     *     description: Retrieves a specific following relationship by its ID. Only accessible to admins.
+     *     description: Retrieves a specific following relationship by its ID. Authentication Admin
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -148,16 +131,15 @@ module.exports = (app) => {
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               properties:
-     *                 _id:
-     *                   type: string
-     *                 student_1_id:
-     *                   type: string
-     *                 student_2_id:
-     *                   type: string
+     *               $ref: '#/components/schemas/Following'
      *       '404':
      *         description: Following not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       403:
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -178,7 +160,7 @@ module.exports = (app) => {
      *     tags:
      *       - Following
      *     summary: Delete following relationship
-     *     description: Removes a following relationship. Students can only delete their own followings. Admins can delete any following.
+     *     description: Removes a following relationship. Students can only delete their own followings. Admins can delete any following. Authentication Admin/Student
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -191,21 +173,20 @@ module.exports = (app) => {
      *     responses:
      *       '200':
      *         description: Following deleted successfully
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 message:
-     *                   type: string
      *       '403':
-     *         description: Forbidden - Student attempting to delete another user's following
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
      *               $ref: '#/components/schemas/Error'
      *       '404':
      *         description: Following not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       403:
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -226,7 +207,7 @@ module.exports = (app) => {
      *     tags:
      *       - Following
      *     summary: Get follower count for a student
-     *     description: Counts how many users are following the specified student (user_id). This endpoint is publicly accessible to authenticated users.
+     *     description: Counts how many users are following the specified student (user_id). Authentication Basic
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -253,6 +234,12 @@ module.exports = (app) => {
      *           application/json:
      *             schema:
      *               $ref: '#/components/schemas/Error'
+     *       403:
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       '500':
      *         description: Server error
      *         content:
@@ -269,7 +256,7 @@ module.exports = (app) => {
      *     tags:
      *       - Following
      *     summary: List students followed by authenticated user
-     *     description: Returns a list of usernames that the authenticated student is following. Only accessible to students (not admins).
+     *     description: Returns a list of usernames that the authenticated student is following. Authentication Student
      *     security:
      *       - BearerAuth: []
      *     responses:
@@ -288,8 +275,8 @@ module.exports = (app) => {
      *                       name:
      *                         type: string
      *                         description: Username of followed student
-     *       '403':
-     *         description: Forbidden - Non-student user
+     *       403:
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:

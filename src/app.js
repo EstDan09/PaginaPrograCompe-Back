@@ -125,7 +125,8 @@ app.use((req, res, next) => {
       typeof body === "object" &&
       !body.data &&
       !body.message &&
-      !body.status
+      !body.status &&
+      !res.locals.skipEnvelope
     ) {
       body = {
         data: body || null,
@@ -143,25 +144,24 @@ app.use((req, res, next) => {
  * Route Registration
  * Mounts route modules for users, electorals, departments, votes, uservotes, results, and S3 operations.
  */
-//require("./routes/reportsTemaplate")(app);
 
 const swaggerUI = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
 
-app.use('/api-docs', swaggerUI.serve);
-app.get('/api-docs', swaggerUI.setup(swaggerSpec, {
+const swagg = swaggerUI.setup(swaggerSpec, {
   swaggerOptions: {
-    persistAuthorization: true,
-    docExpansion: 'list',
-    defaultModelsExpandDepth: 1,
+      //defaultModelsExpandDepth: 1,
+      //defaultModelExpandDepth: 5,
+      //docExpansion: "full",
   },
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'Competitive Programming Platform API Docs',
-}));
+});
 
+app.use("/api-docs", swaggerUI.serve, swagg);
 app.get('/api-docs.json', (req, res) => {
+  res.locals.skipEnvelope = true;
   res.setHeader('Content-Type', 'application/json');
   res.send(swaggerSpec);
+  res.locals.skipEnvelope = false;
 });
 
 app.get("/health", (req, res) => {

@@ -16,7 +16,7 @@ module.exports = (app) => {
      *     tags:
      *       - CodeForces Account
      *     summary: Get authenticated student's CodeForces account
-     *     description: Retrieves the CodeForces account information linked to the authenticated student.
+     *     description: Retrieves the CodeForces account information linked to the authenticated student. Authentication Student
      *     security:
      *       - BearerAuth: []
      *     responses:
@@ -25,28 +25,9 @@ module.exports = (app) => {
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               properties:
-     *                 _id:
-     *                   type: string
-     *                   description: CFAccount ID
-     *                 student_id:
-     *                   type: string
-     *                   description: Associated student ID
-     *                 cf_account:
-     *                   type: string
-     *                   description: CodeForces username
-     *                 is_verified_flag:
-     *                   type: boolean
-     *                   description: Whether account has been verified
-     *       '404':
-     *         description: No CodeForces account linked
-     *         content:
-     *           application/json:
-     *             schema:
-     *               $ref: '#/components/schemas/Error'
-     *       '403':
-     *         description: Forbidden - Only students can access
+     *               $ref: '#/components/schemas/CFAccount'
+     *       403:
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -67,7 +48,7 @@ module.exports = (app) => {
      *     tags:
      *       - CodeForces Account
      *     summary: Get CodeForces accounts by filters
-     *     description: Retrieves CodeForces accounts matching optional filter criteria. Admin only.
+     *     description: Retrieves CodeForces accounts matching optional filter criteria. Authentication Admin
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -94,18 +75,9 @@ module.exports = (app) => {
      *             schema:
      *               type: array
      *               items:
-     *                 type: object
-     *                 properties:
-     *                   _id:
-     *                     type: string
-     *                   student_id:
-     *                     type: string
-     *                   cf_account:
-     *                     type: string
-     *                   is_verified_flag:
-     *                     type: boolean
-     *       '403':
-     *         description: Forbidden - Admins only
+     *                 $ref: '#/components/schemas/CFAccount'
+     *       403:
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -126,7 +98,7 @@ module.exports = (app) => {
      *     tags:
      *       - CodeForces Account
      *     summary: Get CodeForces account by ID
-     *     description: Retrieves a specific CodeForces account by its ID. Admin only.
+     *     description: Retrieves a specific CodeForces account by its ID. Authentication Admin
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -142,24 +114,15 @@ module.exports = (app) => {
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               properties:
-     *                 _id:
-     *                   type: string
-     *                 student_id:
-     *                   type: string
-     *                 cf_account:
-     *                   type: string
-     *                 is_verified_flag:
-     *                   type: boolean
-     *       '403':
-     *         description: Forbidden - Admins only
+     *               $ref: '#/components/schemas/CFAccount'
+     *       '404':
+     *         description: Not found
      *         content:
      *           application/json:
      *             schema:
      *               $ref: '#/components/schemas/Error'
-     *       '404':
-     *         description: CFAccount not found
+     *       403:
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -180,7 +143,7 @@ module.exports = (app) => {
      *     tags:
      *       - CodeForces Account
      *     summary: Start CodeForces account verification process
-     *     description: Initiates verification of a CodeForces account. Returns a verification token and code to submit.
+     *     description: Initiates verification of a CodeForces account. Returns a verification token and code to submit. Authentication Student
      *     security:
      *       - BearerAuth: []
      *     responses:
@@ -196,9 +159,9 @@ module.exports = (app) => {
      *                   description: Token to complete verification
      *                 cf_code:
      *                   type: string
-     *                   description: Code to submit to CodeForces
-     *       '403':
-     *         description: Forbidden - Students only
+     *                   description: Problem to submit to CodeForces
+     *       403:
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -219,7 +182,7 @@ module.exports = (app) => {
      *     tags:
      *       - CodeForces Account
      *     summary: Complete CodeForces account verification
-     *     description: Completes the verification process using the verification token received from start_verify endpoint.
+     *     description: Completes the verification process using the verification token received from start_verify endpoint. Authentication Student
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -235,25 +198,21 @@ module.exports = (app) => {
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               properties:
-     *                 _id:
-     *                   type: string
-     *                 student_id:
-     *                   type: string
-     *                 cf_account:
-     *                   type: string
-     *                 is_verified_flag:
-     *                   type: boolean
-     *                   description: Now true after successful verification
+     *               $ref: '#/components/schemas/CFAccount'
      *       '400':
-     *         description: Verification failed - Invalid token or verification code not found
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
      *               $ref: '#/components/schemas/Error'
-     *       '403':
-     *         description: Forbidden - Students only
+     *       '401':
+     *         description: Invalid token
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       403:
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
@@ -274,7 +233,7 @@ module.exports = (app) => {
      *     tags:
      *       - CodeForces Account
      *     summary: Update CodeForces account handle
-     *     description: Updates the CodeForces username for a student's account. Students can only update their own, admins can update any.
+     *     description: Updates the CodeForces username for a student's account. Students can only update their own, admins can update any. Authentication Admin/Student
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -300,25 +259,15 @@ module.exports = (app) => {
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               properties:
-     *                 _id:
-     *                   type: string
-     *                 student_id:
-     *                   type: string
-     *                 cf_account:
-     *                   type: string
-     *                 is_verified_flag:
-     *                   type: boolean
-     *                   description: May be reset if handle changed
-     *       '403':
-     *         description: Forbidden - Students can only update their own accounts
+     *               $ref: '#/components/schemas/CFAccount'
+     *       403:
+     *         description: Unauthorized
      *         content:
      *           application/json:
      *             schema:
      *               $ref: '#/components/schemas/Error'
      *       '404':
-     *         description: CFAccount not found
+     *         description: Not found
      *         content:
      *           application/json:
      *             schema:

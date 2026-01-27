@@ -1,4 +1,3 @@
-// TODO: fix
 const StudentGroupController = require("../controllers/studentGroupController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const adminMiddleware = require("../middlewares/adminMiddleware");
@@ -18,7 +17,7 @@ module.exports = (app) => {
      *     tags:
      *       - Student Groups
      *     summary: Create student-group membership
-     *     description: Adds a student to a group (coaches/admins only)
+     *     description: Adds a student to a group. Authentication Admin/Coach
      *     security:
      *       - BearerAuth: []
      *     requestBody:
@@ -36,14 +35,28 @@ module.exports = (app) => {
      *     responses:
      *       201:
      *         description: Membership created
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/StudentGroup'
      *       400:
      *         description: Bad request
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       403:
-     *         description: Forbidden - Coaches/admins only
-     *       404:
-     *         description: Group or student not found
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.post("/student-group/create", coach_ops, StudentGroupController.createStudentGroup);
 
@@ -54,7 +67,7 @@ module.exports = (app) => {
      *     tags:
      *       - Student Groups
      *     summary: Get student-group links
-     *     description: Retrieves membership links matching filters
+     *     description: Retrieves membership links matching filters. Authentication Basic
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -69,8 +82,24 @@ module.exports = (app) => {
      *     responses:
      *       200:
      *         description: Array of membership links
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 $ref: '#/components/schemas/StudentGroup'
+     *       403:
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.get("/student-group/get", normal_ops, StudentGroupController.getStudentGroups);
 
@@ -81,7 +110,7 @@ module.exports = (app) => {
      *     tags:
      *       - Student Groups
      *     summary: Get student-group link by ID
-     *     description: Retrieves a specific membership link (admin only)
+     *     description: Retrieves a specific membership link. Authentication Admin
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -93,12 +122,28 @@ module.exports = (app) => {
      *     responses:
      *       200:
      *         description: Link found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/StudentGroup'
      *       403:
-     *         description: Forbidden - Admins only
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       404:
      *         description: Link not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.get("/student-group/get/:id", admin_ops, StudentGroupController.getStudentGroupById);
 
@@ -109,7 +154,7 @@ module.exports = (app) => {
      *     tags:
      *       - Student Groups
      *     summary: Delete student from group
-     *     description: Removes a student from a group
+     *     description: Removes a student from a group. Authentication Admin/Coach
      *     security:
      *       - BearerAuth: []
      *     parameters:
@@ -122,11 +167,23 @@ module.exports = (app) => {
      *       200:
      *         description: Membership deleted
      *       403:
-     *         description: Forbidden - Coaches/admins only
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       404:
      *         description: Link not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.delete("/student-group/delete/:id", coach_ops, StudentGroupController.deleteStudentGroup);
 
@@ -137,7 +194,7 @@ module.exports = (app) => {
      *     tags:
      *       - Student Groups
      *     summary: Join group using invite code
-     *     description: Allows a student to join a group using an invite code
+     *     description: Allows a student to join a group using an invite code. Authentication Student
      *     security:
      *       - BearerAuth: []
      *     requestBody:
@@ -151,16 +208,36 @@ module.exports = (app) => {
      *               invite_code:
      *                 type: string
      *     responses:
-     *       200:
+     *       201:
      *         description: Successfully joined group
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/StudentGroup'
      *       400:
      *         description: Bad request
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       403:
-     *         description: Forbidden - Students only
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       404:
      *         description: Group not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      *       500:
      *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.post("/student-group/use-invite-code", fstudent_ops, StudentGroupController.useGroupInviteCode);
 }
