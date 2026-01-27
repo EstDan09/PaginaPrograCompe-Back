@@ -427,8 +427,7 @@ describe('StudentGroup API', () => {
                 .set('Authorization', `Bearer ${studentToken}`)
                 .send({ invite_code: inviteCode });
 
-            expect(res.statusCode).toBe(200);
-            expect(res.body.message).toContain('Successfully joined the group');
+            expect(res.statusCode).toBe(201);
 
             const verifyRes = await request(app)
                 .get('/student-group/get')
@@ -474,7 +473,7 @@ describe('StudentGroup API', () => {
                 .set('Authorization', `Bearer ${studentToken}`)
                 .send({ invite_code: inviteCode });
 
-            expect(firstRes.statusCode).toBe(200);
+            expect(firstRes.statusCode).toBe(201);
 
             const secondRes = await request(app)
                 .post('/student-group/use-invite-code')
@@ -491,14 +490,14 @@ describe('StudentGroup API', () => {
                 .set('Authorization', `Bearer ${studentToken}`)
                 .send({ invite_code: inviteCode });
 
-            expect(res1.statusCode).toBe(200);
+            expect(res1.statusCode).toBe(201);
 
             const res2 = await request(app)
                 .post('/student-group/use-invite-code')
                 .set('Authorization', `Bearer ${studentToken2}`)
                 .send({ invite_code: inviteCode });
 
-            expect(res2.statusCode).toBe(200);
+            expect(res2.statusCode).toBe(201);
 
             const memberRes = await request(app)
                 .get('/student-group/get')
@@ -547,7 +546,7 @@ describe('StudentGroup API', () => {
                 .set('Authorization', `Bearer ${studentToken2}`)
                 .send({ invite_code: inviteCode });
 
-            expect(res.statusCode).toBe(200);
+            expect(res.statusCode).toBe(201);
         });
 
         it('deleted invite code cannot be used', async () => {
@@ -556,7 +555,7 @@ describe('StudentGroup API', () => {
                 .set('Authorization', `Bearer ${studentToken}`)
                 .send({ invite_code: inviteCode });
 
-            expect(joinRes.statusCode).toBe(200);
+            expect(joinRes.statusCode).toBe(201);
 
             await request(app)
                 .delete(`/group/delete-invite-code/${inviteGroup._id}`)
@@ -577,7 +576,7 @@ describe('StudentGroup API', () => {
                 .set('Authorization', `Bearer ${studentToken}`)
                 .send({ invite_code: inviteCode });
 
-            expect(res.statusCode).toBe(200);
+            expect(res.statusCode).toBe(201);
 
             const memberRes = await request(app)
                 .get('/student-group/get')

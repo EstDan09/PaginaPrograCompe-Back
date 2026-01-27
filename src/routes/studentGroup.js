@@ -11,57 +11,233 @@ const normal_ops = [authMiddleware.auth];
 
 module.exports = (app) => {
     /**
-     * Create student group link
-     * 
-     * Previous authentication: Admin/Coach
-     * 
-     * Body Input: { group_id: string, student_id: string }
-     * 
-     * Body Output: { _id: string, group_id: string, student_id: string }
+     * @openapi
+     * /student-group/create:
+     *   post:
+     *     tags:
+     *       - Student Groups
+     *     summary: Create student-group membership
+     *     description: Adds a student to a group. Authentication Admin/Coach
+     *     security:
+     *       - BearerAuth: []
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required: [group_id, student_id]
+     *             properties:
+     *               group_id:
+     *                 type: string
+     *               student_id:
+     *                 type: string
+     *     responses:
+     *       201:
+     *         description: Membership created
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/StudentGroup'
+     *       400:
+     *         description: Bad request
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       403:
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       500:
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.post("/student-group/create", coach_ops, StudentGroupController.createStudentGroup);
 
     /**
-     * Get student group links by filters
-     * 
-     * Previous authentication: Basic
-     * 
-     * UrlQuery Input: group_id? [string], student_id? [string]
-     * 
-     * Body Output: { _id: string, group_id: string, student_id: string }[]
+     * @openapi
+     * /student-group/get:
+     *   get:
+     *     tags:
+     *       - Student Groups
+     *     summary: Get student-group links
+     *     description: Retrieves membership links matching filters. Authentication Basic
+     *     security:
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: query
+     *         name: group_id
+     *         schema:
+     *           type: string
+     *       - in: query
+     *         name: student_id
+     *         schema:
+     *           type: string
+     *     responses:
+     *       200:
+     *         description: Array of membership links
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 $ref: '#/components/schemas/StudentGroup'
+     *       403:
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       500:
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.get("/student-group/get", normal_ops, StudentGroupController.getStudentGroups);
 
     /**
-     * Get student group links by id
-     * 
-     * Previous authentication: Admin
-     * 
-     * UrlParam Input: :id [string]
-     * 
-     * Body Output: { _id: string, group_id: string, student_id: string }
+     * @openapi
+     * /student-group/get/{id}:
+     *   get:
+     *     tags:
+     *       - Student Groups
+     *     summary: Get student-group link by ID
+     *     description: Retrieves a specific membership link. Authentication Admin
+     *     security:
+     *       - BearerAuth: []
+     *     parameters:
+     *       - name: id
+     *         in: path
+     *         required: true
+     *         schema:
+     *           type: string
+     *     responses:
+     *       200:
+     *         description: Link found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/StudentGroup'
+     *       403:
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       404:
+     *         description: Link not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       500:
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.get("/student-group/get/:id", admin_ops, StudentGroupController.getStudentGroupById);
 
     /**
-     * Delete student group link
-     * 
-     * Previous authentication: Admin/Coach
-     * 
-     * UrlParam Input: :id [string]
-     * 
-     * Body Output: N/A
+     * @openapi
+     * /student-group/delete/{id}:
+     *   delete:
+     *     tags:
+     *       - Student Groups
+     *     summary: Delete student from group
+     *     description: Removes a student from a group. Authentication Admin/Coach
+     *     security:
+     *       - BearerAuth: []
+     *     parameters:
+     *       - name: id
+     *         in: path
+     *         required: true
+     *         schema:
+     *           type: string
+     *     responses:
+     *       200:
+     *         description: Membership deleted
+     *       403:
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       404:
+     *         description: Link not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       500:
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.delete("/student-group/delete/:id", coach_ops, StudentGroupController.deleteStudentGroup);
 
     /**
-     * Use group invite code
-     * 
-     * Previous authentication: Student
-     * 
-     * Body Input: { invite_code: string }
-     * 
-     * Body Output: { message: string }
+     * @openapi
+     * /student-group/use-invite-code:
+     *   post:
+     *     tags:
+     *       - Student Groups
+     *     summary: Join group using invite code
+     *     description: Allows a student to join a group using an invite code. Authentication Student
+     *     security:
+     *       - BearerAuth: []
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required: [invite_code]
+     *             properties:
+     *               invite_code:
+     *                 type: string
+     *     responses:
+     *       201:
+     *         description: Successfully joined group
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/StudentGroup'
+     *       400:
+     *         description: Bad request
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       403:
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       404:
+     *         description: Group not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       500:
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
      */
     app.post("/student-group/use-invite-code", fstudent_ops, StudentGroupController.useGroupInviteCode);
 }

@@ -52,7 +52,8 @@ exports.createStudentExercise = async (req, res) => {
         });
         res.status(201).json({ message: 'Student exercise created successfully', studentExercise });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -102,7 +103,8 @@ exports.getStudentExercises = async (req, res) => {
         const studentExercises = await StudentExercise.find(filter);
         res.status(200).json({ studentExercises });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -118,7 +120,8 @@ exports.getStudentExerciseById = async (req, res) => {
         }
         res.status(200).json(studentExercise);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -135,6 +138,7 @@ exports.deleteStudentExercise = async (req, res) => {
         await studentExercise.deleteOne();
         res.status(200).json({ message: 'Student exercise deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };

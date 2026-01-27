@@ -4,7 +4,7 @@ const CodeforcesService = require("../services/codeforces");
 const mongoose = require('mongoose');
 exports.getStudentStats = async (req, res) => {
     try {
-        const studentId = req.params.studentId;
+        const studentId = req.params.student_id;
         if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
             return res.status(404).json({ message: 'Student not found' });
         }
@@ -41,7 +41,8 @@ exports.getStudentStats = async (req, res) => {
         });
 
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 

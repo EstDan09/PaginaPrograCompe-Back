@@ -23,14 +23,14 @@ exports.sendDirectMessage = async (req, res) => {
         const newMessage = await DirectMessage.create({ sender_id, receiver_id, message: messageText });
         res.status(201).json(newMessage);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
 exports.getConversations = async (req, res) => {
     try {
         const userId = req.user._id;
-        // Get conversation partners sorted by latest message timestamp
         const messages = await DirectMessage.find({ 
             $or: [
                 { sender_id: userId },
@@ -50,7 +50,8 @@ exports.getConversations = async (req, res) => {
 
         res.status(200).json(conversationPartners);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -72,7 +73,8 @@ exports.getConversation = async (req, res) => {
         
         res.status(200).json(messages);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -96,7 +98,8 @@ exports.blockUser = async (req, res) => {
         const newBlock = await BlockedUser.create({ user_id: userId, blocked_user_id: blockedUserId });
         res.status(201).json(newBlock);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -117,7 +120,8 @@ exports.unblockUser = async (req, res) => {
         await BlockedUser.deleteOne({ _id: blockRecord._id });
         res.status(200).json({ message: 'User unblocked successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -128,6 +132,7 @@ exports.getBlockedUsers = async (req, res) => {
         const blockedUserIds = blockedUsers.map(bu => bu.blocked_user_id);
         res.status(200).json(blockedUserIds);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };

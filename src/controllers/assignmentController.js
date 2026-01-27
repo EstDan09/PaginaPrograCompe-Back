@@ -105,7 +105,8 @@ exports.updateAssignment = async (req, res) => {
         const updatedAssignment = await Assignment.findByIdAndUpdate(assignmentId, updateData, { new: true });
         res.status(200).json(updatedAssignment);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -126,6 +127,7 @@ exports.deleteAssignment = async (req, res) => {
         await assignment.deleteOne();
         res.status(200).json({ message: 'Assignment deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
