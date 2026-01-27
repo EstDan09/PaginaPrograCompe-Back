@@ -271,11 +271,11 @@ exports.getMyGroupsSummary = async (req, res) => {
     try {
         let groups;
         if (req.user.role === 'coach') {
-            groups = await Group.find({ parent_coach: req.user._id }).select('_id name description');
+            groups = await Group.find({ parent_coach: req.user._id });
         } else if (req.user.role === 'student') {
             const studentGroups = await StudentGroup.find({ student_id: req.user._id }).select('group_id');
             const groupIds = studentGroups.map(sg => sg.group_id);
-            groups = await Group.find({ _id: { $in: groupIds } }).select('_id name description');
+            groups = await Group.find({ _id: { $in: groupIds } });
         } else {
             return res.status(403).json({ message: 'Access denied' });
         }
