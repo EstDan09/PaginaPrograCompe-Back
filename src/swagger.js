@@ -26,6 +26,17 @@ const swaggerDefinition = {
         description: 'JWT token for authentication. Include in Authorization header as: Bearer <token>',
       },
     },
+    schemas: {
+      Error: {
+        type: 'object',
+        properties: {
+          message: {
+            type: 'string',
+            description: 'Error message',
+          },
+        },
+      },
+    },
   },
   security: [
     {

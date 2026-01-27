@@ -26,7 +26,8 @@ exports.createGroup = async (req, res) => {
         const group = await Group.create({ name, description, parent_coach: (parent_coach ? parent_coach : req.user._id) });
         res.status(201).json(group);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -45,7 +46,8 @@ exports.getGroups = async (req, res) => {
         const groups = await Group.find(filter);
         res.status(200).json(groups);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };  
 
@@ -70,7 +72,8 @@ exports.getGroupById = async (req, res) => {
         }
         res.status(200).json(group);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -94,7 +97,8 @@ exports.updateGroup = async (req, res) => {
         const updatedGroup = await Group.findByIdAndUpdate(groupId, updateData, { new: true });
         res.status(200).json(updatedGroup);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -114,7 +118,8 @@ exports.deleteGroup = async (req, res) => {
         await group.deleteOne();
         res.status(200).json({ message: 'Group deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -144,7 +149,8 @@ exports.createGroupInviteCode = async (req, res) => {
         await group.save();
         res.status(201).json({ invite_code: inviteCode });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -166,7 +172,8 @@ exports.getGroupInviteCode = async (req, res) => {
         }
         res.status(200).json({ invite_code: group.invite_code });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -189,7 +196,8 @@ exports.deleteGroupInviteCode = async (req, res) => {
         await Group.findByIdAndUpdate(groupId, { $unset: { invite_code: '' } });
         res.status(200).json({ message: 'Invite code deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -214,7 +222,8 @@ exports.getGroupMessages = async (req, res) => {
         }
         res.status(200).json(group.group_messages);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -253,7 +262,8 @@ exports.sendGroupMessage = async (req, res) => {
         await group.save();
         res.status(201).json(newMessage);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -302,7 +312,8 @@ exports.getMyGroupsSummary = async (req, res) => {
         }));
         res.status(200).json(summary);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -347,6 +358,7 @@ exports.getGroupDetails = async (req, res) => {
             assignments: assignments
         });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };

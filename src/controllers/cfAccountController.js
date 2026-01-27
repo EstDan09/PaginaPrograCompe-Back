@@ -11,7 +11,8 @@ exports.myCFAccount = async (req, res) => {
         }
         res.status(200).json(cfAccount);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -25,7 +26,8 @@ exports.getCFAccounts = async (req, res) => {
         const cfAccounts = await CFAccount.find(filter);
         res.status(200).json({ cfAccounts });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -41,7 +43,8 @@ exports.getCFAccount = async (req, res) => {
         }
         res.status(200).json(cfAccount);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -56,7 +59,8 @@ exports.startVerifyCFAccount = async (req, res) => {
         const verify_token = jwt.sign({ _id: req.user._id, cf_code }, process.env.SECRET_KEY, { expiresIn: `${CodeforcesService.verifyProblemTimelimitSeconds}s` });
         res.status(200).json({verification_token: verify_token, cf_code});
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -84,7 +88,8 @@ exports.endVerifyCFAccount = async (req, res) => {
         const updatedCFAccount = await CFAccount.findByIdAndUpdate(cfAccount._id, updateData, { new: true });
         res.status(200).json(updatedCFAccount);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -104,6 +109,7 @@ exports.updateCFAccount = async (req, res) => {
         const updatedCFAccount = await CFAccount.findByIdAndUpdate(cfAccount._id, updateData, { new: true });
         res.status(200).json(updatedCFAccount);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };

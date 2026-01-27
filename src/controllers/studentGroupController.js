@@ -26,7 +26,8 @@ exports.createStudentGroup = async (req, res) => {
         const newStudentGroup = await StudentGroup.create({ student_id, group_id });
         res.status(201).json(newStudentGroup);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -51,7 +52,8 @@ exports.getStudentGroups = async (req, res) => {
         const studentGroups = await StudentGroup.find(filter);
         res.status(200).json(studentGroups);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -67,7 +69,8 @@ exports.getStudentGroupById = async (req, res) => {
         }
         res.status(200).json(studentGroup);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -90,7 +93,8 @@ exports.deleteStudentGroup = async (req, res) => {
         await studentGroup.deleteOne();
         res.status(200).json({ message: 'StudentGroup deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -111,6 +115,7 @@ exports.useGroupInviteCode = async (req, res) => {
         await StudentGroup.create({ student_id: req.user._id, group_id: group._id });
         res.status(200).json({ message: 'Successfully joined the group' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };

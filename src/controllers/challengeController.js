@@ -31,7 +31,8 @@ exports.createChallenge = async (req, res) => {
         });
         res.status(201).json({ message: 'Challenge created successfully', challenge });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -52,7 +53,8 @@ exports.getChallenges = async (req, res) => {
         const challenges = await Challenge.find(filter);
         res.status(200).json({ challenges });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -68,7 +70,8 @@ exports.getChallengeById = async (req, res) => {
         }
         res.status(200).json(challenge);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -88,7 +91,8 @@ exports.deleteChallenge = async (req, res) => {
         await challenge.deleteOne();
         res.status(200).json({ message: 'Challenge deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -116,7 +120,8 @@ exports.verifyChallenge = async (req, res) => {
         const new_challenge = await Challenge.findByIdAndUpdate(challengeId, updateData, { new: true });
         res.status(200).json(new_challenge);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -139,6 +144,7 @@ exports.askChallenge = async (req, res) => {
         const cf_problem = await CodeforcesService.getRandomUnsolvedFilteredProblem(req.user.cf_handle, min_rating ? min_rating : 800, max_rating ? max_rating : 3500, tags ? tags : []);
         res.status(200).json(cf_problem);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };

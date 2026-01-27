@@ -32,7 +32,8 @@ exports.createFollowing = async (req, res) => {
         const newFollowing = await Following.create({ student_1_id, student_2_id });
         res.status(201).json(newFollowing);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -51,7 +52,8 @@ exports.getFollowing = async (req, res) => {
         const followings = await Following.find(filter);
         res.status(200).json(followings);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -67,7 +69,8 @@ exports.getFollowingById = async (req, res) => {
         }
         res.status(200).json(following);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -87,7 +90,8 @@ exports.deleteFollowing = async (req, res) => {
         await following.deleteOne();
         res.status(200).json({ message: 'Following deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -100,7 +104,8 @@ exports.countFollowers = async (req, res) => {
         const count = await Following.countDocuments({student_2_id: userId});
         res.status(200).json({count});
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -112,6 +117,7 @@ exports.listFollowings = async (req, res) => {
         }));
         res.status(200).json({ following: followingList });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
