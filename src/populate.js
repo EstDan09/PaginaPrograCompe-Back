@@ -133,11 +133,11 @@ const populateDatabase = async() => {
 
         for (let i = 0; i < 3; i++) {
             const messages = [
-                { message: 'Welcome to the group! Looking forward to working together.' },
-                { message: 'Has everyone checked out the first assignment?' },
-                { message: 'Great progress everyone! Keep it up!' },
-                { message: 'Remember the deadline is next Friday.' },
-                { message: 'Feel free to ask questions in this chat.' }
+                { message: 'Yo renuncié mi brete porque me recansé.' },
+                { message: 'Yo realmente no tomo vino, ahora solo hago ejercicio.' },
+                { message: 'En la noche yo leo, mientras que los trabajadores duermen.' },
+                { message: 'En la noche yo resuelve rompecabezas, y por esto estoy tan feliz...' },
+                { message: 'y en mi recreo, yo bailo bugi; sí, en mi recreo, yo me bailo un bugi; el baile bugi, y mi recreo bugi... UUUU' }
             ];
             
             for (let msg of messages) {
@@ -151,11 +151,10 @@ const populateDatabase = async() => {
             }
         }
 
-        // Add student messages to first group
         const studentMessages = [
-            { message: 'Hi coach! I have a question about exercise 1.' },
-            { message: 'Never mind, I figured it out!' },
-            { message: 'Thanks for the guidance!' }
+            { message: 'Hola coach, existen infinitos números primos?' },
+            { message: 'e uma mentira, ya me di cuenta que no' },
+            { message: 'Muchas gracias por su ayuda >:))' }
         ];
         for (let msg of studentMessages) {
             const msgRes = await request(app)
@@ -250,7 +249,40 @@ const populateDatabase = async() => {
             }
         }
 
+        const directMessages = [
+            'Riquitikitak bro',
+            'Nah bro, ayer me quedé pescando ejercicios de codeforces',
+            'Me quedé más cansado que un martín pescador encargado de vigilar a Sísifo',
+            'Ish mae, mucha suerte pescando \'tonces, ojalá descanses más',
+            'Nos hablamos >:))'
+        ];
+
+        for (let i = 0; i < 3; i++) {
+            const msgRes = await request(app)
+                .post(`/direct-messages/send/${student2._id}`)
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({
+                    message: directMessages[i]
+                });
+            if (msgRes.status !== 201) {
+                throw new Error('Failed to create direct message: ' + msgRes.text);
+            }
+        }
+
+        for (let i = 3; i < 5; i++) {
+            const msgRes = await request(app)
+                .post(`/direct-messages/send/${student._id}`)
+                .set('Authorization', `Bearer ${studentToken2}`)
+                .send({
+                    message: directMessages[i]
+                });
+            if (msgRes.status !== 201) {
+                throw new Error('Failed to create direct message: ' + msgRes.text);
+            }
+        }
+
         console.log('Database populated successfully');
+
     } catch (error) {
         console.error('Error populating database:', error);
         throw error;
