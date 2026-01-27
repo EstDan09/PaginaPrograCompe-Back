@@ -323,9 +323,7 @@ async function getUserSubmissions(cfHandle, from = 1, count = 50) {
 
   try {
     const {status, result: submissions} = await CodeforcesAPI.call("user.status", {
-      handle: cfHandle,
-      from: from,
-      count: count
+      handle: cfHandle
     });
     if (status !== "OK") {
       throw new Error("Failed to fetch user submissions");
@@ -368,13 +366,23 @@ async function getStudentKPIs(cfHandle) {
 
     const submissions = await getUserSubmissions(cfHandle, 1, 10000);
     const solvedProblems = new Set();
+
+    let longest_streak = 0;
+    const day = 24*3600;
+    let last_day = -1;
+    let current_streak = 0;
     submissions.forEach(sub => {
       if (sub.verdict === "OK") {
         solvedProblems.add(`${sub.problem.contestId}${sub.problem.index}`);
+        const cur_day = Math.floor(sub.creationTimeSeconds/day);
+        if (Math.abs(last_day - cur_day) > 1) current_streak = 0;
+        if (last_day !== cur_day) current_streak += 1;
+        last_day = cur_day;
+        longest_streak = Math.max(current_streak, longest_streak);
       }
     });
 
-    const streakDays = submissions.length > 0 ? 1 : 0;
+    const streakDays = longest_streak;
 
     return {
       rating: userInfo.rating || 0,
@@ -400,21 +408,17 @@ async function getStudentRatingGraph(cfHandle) {
   }
 
   try {
-    const submissions = await getUserSubmissions(cfHandle, 1, 10000);
-    
-    const ratingChanges = [];
-    const seenRatings = new Set();
-
-    submissions.forEach(sub => {
-      if (sub.author && sub.author.rating !== undefined && !seenRatings.has(sub.author.rating)) {
-        const date = new Date(sub.creationTimeSeconds * 1000);
-        ratingChanges.push({
-          t: date.toISOString().split('T')[0],
-          rating: sub.author.rating
-        });
-        seenRatings.add(sub.author.rating);
-      }
+    const {status, result: changes} = await CodeforcesAPI.call("user.rating", {
+      handle: cfHandle
     });
+    if (status !== "OK") {
+      throw new Error("Failed to fetch rating changes");
+    }
+
+    const ratingChanges = changes.map(rc => ({
+      t: (new Date(rc.ratingUpdateTimeSeconds*1000)).toISOString().split('T')[0],
+      rating: rc.newRating
+    }));
 
     const ratings = ratingChanges.map(rc => rc.rating);
     const min = ratings.length > 0 ? Math.min(...ratings) : 0;
@@ -423,7 +427,7 @@ async function getStudentRatingGraph(cfHandle) {
     return {
       min: min,
       max: max,
-      series: ratingChanges.slice(0, 20) 
+      series: ratingChanges
     };
   } catch (error) {
     throw new Error(`Failed to get student rating graph: ${error.message}`);
@@ -556,5 +560,6 @@ module.exports = {
   getStudentRatingGraph,
   getStudentSolvesByRating,
   getStudentSolvedTags,
-  getRandomUnsolvedFilteredProblem
+  getRandomUnsolvedFilteredProblem,
+  IS_TEST_MODE
 };
