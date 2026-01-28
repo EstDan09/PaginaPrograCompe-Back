@@ -62,6 +62,56 @@ module.exports = (app) => {
 
     /**
      * @openapi
+     * /student-group/add-member:
+     *   post:
+     *     tags:
+     *       - Student Groups
+     *     summary: Create student-group membership by username
+     *     description: Adds a student to a group. Authentication Admin/Coach
+     *     security:
+     *       - BearerAuth: []
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required: [group_id, student_username]
+     *             properties:
+     *               group_id:
+     *                 type: string
+     *               student_username:
+     *                 type: string
+     *     responses:
+     *       201:
+     *         description: Membership created
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/StudentGroup'
+     *       400:
+     *         description: Bad request
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       403:
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       500:
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     */
+    app.post("/student-group/add-member", coach_ops, StudentGroupController.addMemberGroup);
+
+    /**
+     * @openapi
      * /student-group/get:
      *   get:
      *     tags:
