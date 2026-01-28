@@ -256,7 +256,7 @@ module.exports = (app) => {
      *     tags:
      *       - Following
      *     summary: List students followed by authenticated user
-     *     description: Returns a list of usernames that the authenticated student is following. Authentication Student
+     *     description: Returns a list of usernames and ids that the authenticated student is following. Authentication Student
      *     security:
      *       - BearerAuth: []
      *     responses:
@@ -275,6 +275,9 @@ module.exports = (app) => {
      *                       name:
      *                         type: string
      *                         description: Username of followed student
+     *                       student_id:
+     *                         type: string
+     *                         description: Id of followed student
      *       403:
      *         description: Unauthorized
      *         content:
