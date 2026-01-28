@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const Group = require("../models/Group");
 const StudentGroup = require("../models/StudentGroup");
 const Assignment = require("../models/Assignment");
+const Exercise = require("../models/Exercise");
+const CodeforcesService = require("../services/codeforces");
 
 exports.createAssignment = async (req, res) => {
     try {
@@ -129,5 +131,51 @@ exports.deleteAssignment = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.createAssignmentWithExercises = async (req, res) => {
+    try {
+        const { title, description, due_date, parent_group, exercises } = req.body;
+        if (!title || !parent_group) {
+            return res.status(400).json({ message: 'Title and parent_group are required' });
+        }
+        if (!mongoose.Types.ObjectId.isValid(parent_group)) {
+            return res.status(400).json({ message: 'Invalid groupId' });
+        }
+        const group = await Group.findById(parent_group);
+        if (!group) {
+            return res.status(400).json({ message: 'Invalid groupId' });
+        }
+        if (req.user.role === 'coach' && group.parent_coach.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'You do not have permission to create assignments for this group' });
+        }
+        if (!exercises) {
+            return res.status(400).json({ message: 'Exercises are required' });
+        }
+        for (const {name, cf_code} of exercises) {
+            if (!name || !cf_code) {
+                return res.status(400).json({ message: 'Each exercise needs a name and a code' });
+            }
+            if (!(await CodeforcesService.validateCfCode(cf_code))) {
+                return res.status(400).json({ message: 'Each cf_code must be valid' });
+            }
+        }
+        const newAssignment = await Assignment.create({
+            title,
+            description,
+            due_date,
+            parent_group
+        });
+        for (const {name, cf_code} of exercises) {
+            await Exercise.create({
+                name,
+                cf_code,
+                parent_assignment: newAssignment._id
+            });
+        }
+        res.status(201).json(newAssignment);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
