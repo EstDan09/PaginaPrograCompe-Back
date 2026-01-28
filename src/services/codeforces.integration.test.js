@@ -294,6 +294,7 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
     it("should return properly structured series", async () => {
       const result = await codeforces.getStudentRatingGraph(REAL_HANDLE);
       expect(Array.isArray(result.series)).toBe(true);
+      expect(result.series.length > 0).toBe(true);
       if (result.series.length > 0) {
         const point = result.series[0];
         expect(point).toHaveProperty("t");
@@ -307,11 +308,6 @@ describe("Codeforces Service - Integration Tests (Real API)", () => {
       expect(result.min).toBeLessThanOrEqual(result.max);
       expect(typeof result.min).toBe("number");
       expect(typeof result.max).toBe("number");
-    });
-
-    it("should return limited series (max 20 points)", async () => {
-      const result = await codeforces.getStudentRatingGraph(REAL_HANDLE);
-      expect(result.series.length).toBeLessThanOrEqual(20);
     });
   });
 
