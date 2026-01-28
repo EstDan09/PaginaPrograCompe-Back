@@ -40,6 +40,9 @@ exports.addMemberGroup = async (req, res) => {
         if (!student || student.role !== 'student') {
             return res.status(400).json({ message: 'Invalid student_id' });
         }
+        if (!group_id || !mongoose.Types.ObjectId.isValid(group_id)) {
+            return res.status(400).json({ message: 'Invalid group_id' });
+        }
         const group = await Group.findById(group_id);
         if (!group) {
             return res.status(400).json({ message: 'Invalid group_id' });

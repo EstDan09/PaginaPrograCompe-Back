@@ -29,7 +29,7 @@ const createAndLoginUser = async (userData) => {
 };
 
 describe('StudentGroup API', () => {
-    let adminToken, coachToken, coachToken2, studentToken, studentToken2, studentToken3;
+    let adminToken, coachToken, coachToken2, studentToken, studentToken2, studentToken3, studentToken4, studentToken5;
     let testUsers = {};
     let testGroups = {};
     let testStudentGroups = {};
@@ -73,6 +73,18 @@ describe('StudentGroup API', () => {
             role: 'student'
         }));
 
+        ({ user: testUsers.student4, token: studentToken4 } = await createAndLoginUser({
+            username: 'student4-sg',
+            password: 'student4pass',
+            role: 'student'
+        }));
+
+        ({ user: testUsers.student5, token: studentToken5 } = await createAndLoginUser({
+            username: 'student5-sg',
+            password: 'student5pass',
+            role: 'student'
+        }));
+
         const coachGroupRes = await request(app)
             .post('/group/create')
             .set('Authorization', `Bearer ${coachToken}`)
@@ -95,6 +107,106 @@ describe('StudentGroup API', () => {
     afterAll(async () => {
         await mongoose.connection.dropDatabase();
         await mongoose.disconnect();
+    });
+
+    describe('Add member by username', () => {
+        it('coach can add member by username to their own group', async () => {
+            const res = await request(app)
+                .post('/student-group/add-member')
+                .set('Authorization', `Bearer ${coachToken}`)
+                .send({ student_username: testUsers.student4.username, group_id: testGroups.coachGroup._id });
+            expect(res.statusCode).toBe(201);
+            expect(res.body).toHaveProperty('_id');
+            expect(res.body.student_id).toBe(testUsers.student4._id.toString());
+            expect(res.body.group_id).toBe(testGroups.coachGroup._id);
+        });
+
+        it('coach cannot add member by username to another coach group', async () => {
+            const res = await request(app)
+                .post('/student-group/add-member')
+                .set('Authorization', `Bearer ${coachToken}`)
+                .send({ student_username: testUsers.student4.username, group_id: testGroups.coach2Group._id });
+            expect(res.statusCode).toBe(403);
+            expect(res.body.message).toBe('You do not have permission to add students to this group');
+        });
+
+        it('admin can add member by username to any group', async () => {
+            const res = await request(app)
+                .post('/student-group/add-member')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ student_username: testUsers.student5.username, group_id: testGroups.coach2Group._id });
+
+            expect(res.statusCode).toBe(201);
+            expect(res.body.group_id).toBe(testGroups.coach2Group._id);
+        });
+
+        it('returns 400 for invalid student_username', async () => {
+            const res = await request(app)
+                .post('/student-group/add-member')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ student_username: 'non-existent-user', group_id: testGroups.coachGroup._id });
+
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toBe('Invalid student_id');
+        });
+
+        it('returns 400 when student_username is missing', async () => {
+            const res = await request(app)
+                .post('/student-group/add-member')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ group_id: testGroups.coachGroup._id });
+
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toBe('Invalid student_username');
+        });
+
+        it('returns 400 for invalid group_id', async () => {
+            const res = await request(app)
+                .post('/student-group/add-member')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ student_username: testUsers.student5.username, group_id: 'invalid-group-id' });
+
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toBe('Invalid group_id');
+        });
+
+        it('returns 400 for non-student user', async () => {
+            const res = await request(app)
+                .post('/student-group/add-member')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ student_username: testUsers.coach.username, group_id: testGroups.coachGroup._id });
+
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toBe('Invalid student_id');
+        });
+
+        it('returns 400 for non-existent group', async () => {
+            const fakeGroupId = new mongoose.Types.ObjectId();
+            const res = await request(app)
+                .post('/student-group/add-member')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ student_username: testUsers.student5.username, group_id: fakeGroupId.toString() });
+
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toBe('Invalid group_id');
+        });
+
+        it('student cannot add member by username', async () => {
+            const res = await request(app)
+                .post('/student-group/add-member')
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({ student_username: testUsers.student5.username, group_id: testGroups.coachGroup._id });
+
+            expect(res.statusCode).toBe(403);
+        });
+
+        it('unauthenticated user cannot add member by username', async () => {
+            const res = await request(app)
+                .post('/student-group/add-member')
+                .send({ student_username: testUsers.student4.username, group_id: testGroups.coachGroup._id });
+
+            expect(res.statusCode).toBe(401);
+        });
     });
 
     describe('Create student group', () => {
