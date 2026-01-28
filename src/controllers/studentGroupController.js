@@ -30,6 +30,30 @@ exports.createStudentGroup = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+exports.addMemberGroup = async (req, res) => {
+    try {
+        const { student_username, group_id } = req.body;
+        if (!student_username) {
+            return res.status(400).json({ message: 'Invalid student_username' });
+        }
+        const student = await User.findOne({username: student_username});
+        if (!student || student.role !== 'student') {
+            return res.status(400).json({ message: 'Invalid student_id' });
+        }
+        const group = await Group.findById(group_id);
+        if (!group) {
+            return res.status(400).json({ message: 'Invalid group_id' });
+        }
+        if (req.user.role === 'coach' && group.parent_coach.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'You do not have permission to add students to this group' });
+        }
+        const newStudentGroup = await StudentGroup.create({ student_id: student._id, group_id });
+        res.status(201).json(newStudentGroup);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
 
 exports.getStudentGroups = async (req, res) => {
     try {
