@@ -404,6 +404,115 @@ describe('StudentGroup API', () => {
         });
     });
 
+    describe('Get student groups with username', () => {
+        it('student can get their own student groups with username', async () => {
+            const res = await request(app)
+                .get('/student-group/get-with-username')
+                .set('Authorization', `Bearer ${studentToken}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(Array.isArray(res.body)).toBe(true);
+            expect(res.body.length).toBeGreaterThan(0);
+            res.body.forEach(sg => {
+                expect(sg.student_id).toBe(testUsers.student._id.toString());
+                expect(sg.student_username).toBe(testUsers.student.username);
+            });
+        });
+
+        it('student cannot specify student_id', async () => {
+            const res = await request(app)
+                .get('/student-group/get-with-username')
+                .query({ student_id: testUsers.student2._id.toString() })
+                .set('Authorization', `Bearer ${studentToken}`);
+
+            expect(res.statusCode).toBe(403);
+            expect(res.body.message).toBe('Access denied');
+        });
+
+        it('coach can get student groups for their groups with username', async () => {
+            const res = await request(app)
+                .get('/student-group/get-with-username')
+                .set('Authorization', `Bearer ${coachToken}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(Array.isArray(res.body)).toBe(true);
+            res.body.forEach(sg => {
+                expect(sg.group_id).toBe(testGroups.coachGroup._id);
+                expect(sg.student_username).toBeDefined();
+            });
+        });
+
+        it('coach can filter by their own group_id', async () => {
+            const res = await request(app)
+                .get('/student-group/get-with-username')
+                .query({ group_id: testGroups.coachGroup._id })
+                .set('Authorization', `Bearer ${coachToken}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(Array.isArray(res.body)).toBe(true);
+            res.body.forEach(sg => {
+                expect(sg.group_id).toBe(testGroups.coachGroup._id);
+                expect(sg.student_username).toBeDefined();
+            });
+        });
+
+        it('coach cannot get student groups for another coach groups', async () => {
+            const res = await request(app)
+                .get('/student-group/get-with-username')
+                .query({ group_id: testGroups.coach2Group._id })
+                .set('Authorization', `Bearer ${coachToken}`);
+
+            expect(res.statusCode).toBe(403);
+            expect(res.body.message).toBe('You do not have permission to view student groups for this group');
+        });
+
+        it('admin can get all student groups with username', async () => {
+            const res = await request(app)
+                .get('/student-group/get-with-username')
+                .set('Authorization', `Bearer ${adminToken}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(Array.isArray(res.body)).toBe(true);
+            expect(res.body.length).toBeGreaterThan(0);
+            expect(res.body.some(sg => sg.student_username)).toBe(true);
+        });
+
+        it('admin can filter by student_id', async () => {
+            const res = await request(app)
+                .get('/student-group/get-with-username')
+                .query({ student_id: testUsers.student._id.toString() })
+                .set('Authorization', `Bearer ${adminToken}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(Array.isArray(res.body)).toBe(true);
+            res.body.forEach(sg => {
+                expect(sg.student_id).toBe(testUsers.student._id.toString());
+                expect(sg.student_username).toBe(testUsers.student.username);
+            });
+        });
+
+        it('admin can filter by group_id', async () => {
+            const res = await request(app)
+                .get('/student-group/get-with-username')
+                .query({ group_id: testGroups.coachGroup._id })
+                .set('Authorization', `Bearer ${adminToken}`);
+
+            expect(res.statusCode).toBe(200);
+            expect(Array.isArray(res.body)).toBe(true);
+            res.body.forEach(sg => {
+                expect(sg.group_id).toBe(testGroups.coachGroup._id);
+                expect(sg.student_username).toBeDefined();
+            });
+        });
+
+        it('unauthenticated user cannot get student groups with username', async () => {
+            const res = await request(app)
+                .get('/student-group/get-with-username');
+
+            expect(res.statusCode).toBe(401);
+        });
+    });
+
     describe('Get student group by id', () => {
         it('admin can get student group by id', async () => {
             const res = await request(app)

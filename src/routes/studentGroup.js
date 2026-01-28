@@ -290,4 +290,47 @@ module.exports = (app) => {
      *               $ref: '#/components/schemas/Error'
      */
     app.post("/student-group/use-invite-code", fstudent_ops, StudentGroupController.useGroupInviteCode);
+
+    /**
+     * @openapi
+     * /student-group/get-with-username:
+     *   get:
+     *     tags:
+     *       - Student Groups
+     *     summary: Get student-group links with student usernames
+     *     description: Retrieves membership links matching filters with student usernames. Authentication Basic
+     *     security:
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: query
+     *         name: group_id
+     *         schema:
+     *           type: string
+     *       - in: query
+     *         name: student_id
+     *         schema:
+     *           type: string
+     *     responses:
+     *       200:
+     *         description: Array of membership links
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 $ref: '#/components/schemas/StudentGroupUsername'
+     *       403:
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       500:
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     */
+    app.get("/student-group/get-with-username", normal_ops, StudentGroupController.getStudentGroupsWithUsername);
 }

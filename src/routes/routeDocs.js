@@ -228,6 +228,27 @@
  * @openapi
  * components:
  *   schemas:
+ *     StudentGroupUsername:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: Unique identifier for the student-group relationship
+ *         student_id:
+ *           type: string
+ *           description: ID of the student
+ *         student_username:
+ *           type: string
+ *           descrption: student username
+ *         group_id:
+ *           type: string
+ *           description: ID of the group
+ */
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
  *     User:
  *       type: object
  *       properties:

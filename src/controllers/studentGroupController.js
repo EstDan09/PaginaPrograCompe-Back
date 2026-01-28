@@ -146,3 +146,39 @@ exports.useGroupInviteCode = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+exports.getStudentGroupsWithUsername = async (req, res) => {
+    try {
+        const { student_id, group_id } = req.query;
+        const filter = {};
+        if (student_id) filter.student_id = student_id;
+        if (group_id) filter.group_id = group_id;
+        if (req.user.role === 'student') {
+            if (student_id) {
+                return res.status(403).json({ message: 'Access denied' });
+            }
+            filter.student_id = req.user._id;
+        } else if (req.user.role === 'coach') {
+            const coachGroups = await Group.find({ parent_coach: req.user._id }).select('_id');
+            const coachGroupIds = coachGroups.map(g => g._id.toString());
+            if (group_id && !coachGroupIds.includes(group_id)) {
+                return res.status(403).json({ message: 'You do not have permission to view student groups for this group' });
+            } else filter.group_id = { $in: coachGroupIds };
+        }
+        const studentGroups = await StudentGroup.find(filter);
+        const studentGroupsWithUsername = await Promise.all(studentGroups.map(async (student_group) => {
+            const student = await User.findById(student_group.student_id).select('username');
+            const student_username = student ? student.username : undefined;
+            return {
+                _id: student_group._id,
+                student_id: student_group.student_id,
+                group_id: student_group.group_id,
+                student_username
+            };
+        }));
+        res.status(200).json(studentGroupsWithUsername);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
