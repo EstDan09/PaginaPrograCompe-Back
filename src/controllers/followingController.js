@@ -111,9 +111,10 @@ exports.countFollowers = async (req, res) => {
 
 exports.listFollowings = async (req, res) => {
     try {
-        const followings = await Following.find({ student_1_id: req.user._id }).populate('student_2_id', 'username');
+        const followings = await Following.find({ student_1_id: req.user._id }).populate('student_2_id');
         const followingList = followings.map(follow => ({
-            name: follow.student_2_id.username
+            name: follow.student_2_id.username,
+            student_id: follow.student_2_id._id
         }));
         res.status(200).json({ following: followingList });
     } catch (error) {
