@@ -5,6 +5,7 @@ const User = require('../models/User');
 const CFAccount = require('../models/CFAccount');
 const Group = require('../models/Group');
 const Assignment = require('../models/Assignment');
+const Exercise = require('../models/Exercise');
 const StudentGroup = require('../models/StudentGroup');
 
 describe('Assignment API', () => {
@@ -152,6 +153,157 @@ describe('Assignment API', () => {
                 .post('/assignment/create')
                 .set('Authorization', `Bearer ${coachToken}`)
                 .send({ title: 'Title', description: 'Description', due_date: new Date(), parent_group: 'invalid' });
+            expect(res.status).toBe(400);
+        });
+    });
+
+    describe('Create assignment with exercises', () => {
+        it('coach can create a new assignment with exercises for their group', async () => {
+            const res = await request(app)
+                .post('/assignment/create-with-exercises')
+                .set('Authorization', `Bearer ${coachToken}`)
+                .send({
+                    title: 'Coach Assignment With Exercises',
+                    description: 'Assignment with exercises',
+                    due_date: new Date(),
+                    parent_group: testGroups.coachGroup._id,
+                    exercises: [
+                        { name: 'Exercise One', cf_code: '1234A' },
+                        { name: 'Exercise Two', cf_code: '1234B' }
+                    ]
+                });
+            expect(res.status).toBe(201);
+            expect(res.body).toHaveProperty('_id');
+
+            const exercises = await Exercise.find({ parent_assignment: res.body._id });
+            expect(exercises.length).toBe(2);
+            expect(exercises.map(e => e.name)).toEqual(expect.arrayContaining(['Exercise One', 'Exercise Two']));
+        });
+
+        it('coach cannot create assignment with exercises for another coach\'s group', async () => {
+            const res = await request(app)
+                .post('/assignment/create-with-exercises')
+                .set('Authorization', `Bearer ${coachToken}`)
+                .send({
+                    title: 'Unauthorized Assignment',
+                    description: 'Assignment with exercises',
+                    parent_group: testGroups.coach2Group._id,
+                    exercises: [{ name: 'Exercise', cf_code: '1234C' }]
+                });
+            expect(res.status).toBe(403);
+        });
+
+        it('admin can create a new assignment with exercises for any group', async () => {
+            const res = await request(app)
+                .post('/assignment/create-with-exercises')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({
+                    title: 'Admin Assignment With Exercises',
+                    description: 'Assignment with exercises',
+                    parent_group: testGroups.coachGroup._id,
+                    exercises: [{ name: 'Exercise', cf_code: '1234D' }]
+                });
+            expect(res.status).toBe(201);
+            expect(res.body.title).toBe('Admin Assignment With Exercises');
+        });
+
+        it('student cannot create an assignment with exercises', async () => {
+            const res = await request(app)
+                .post('/assignment/create-with-exercises')
+                .set('Authorization', `Bearer ${studentToken}`)
+                .send({
+                    title: 'Student Assignment',
+                    description: 'Assignment with exercises',
+                    parent_group: testGroups.coachGroup._id,
+                    exercises: [{ name: 'Exercise', cf_code: '1234E' }]
+                });
+            expect(res.status).toBe(403);
+        });
+
+        it('unauthenticated user cannot create assignment with exercises', async () => {
+            const res = await request(app)
+                .post('/assignment/create-with-exercises')
+                .send({
+                    title: 'Unauth Assignment',
+                    description: 'Assignment with exercises',
+                    parent_group: testGroups.coachGroup._id,
+                    exercises: [{ name: 'Exercise', cf_code: '1234F' }]
+                });
+            expect(res.status).toBe(401);
+        });
+
+        it('returns 400 for missing title', async () => {
+            const res = await request(app)
+                .post('/assignment/create-with-exercises')
+                .set('Authorization', `Bearer ${coachToken}`)
+                .send({
+                    description: 'Assignment with exercises',
+                    parent_group: testGroups.coachGroup._id,
+                    exercises: [{ name: 'Exercise', cf_code: '1234G' }]
+                });
+            expect(res.status).toBe(400);
+        });
+
+        it('returns 400 for missing parent_group', async () => {
+            const res = await request(app)
+                .post('/assignment/create-with-exercises')
+                .set('Authorization', `Bearer ${coachToken}`)
+                .send({
+                    title: 'Assignment Missing Group',
+                    description: 'Assignment with exercises',
+                    exercises: [{ name: 'Exercise', cf_code: '1234H' }]
+                });
+            expect(res.status).toBe(400);
+        });
+
+        it('returns 400 for missing exercises', async () => {
+            const res = await request(app)
+                .post('/assignment/create-with-exercises')
+                .set('Authorization', `Bearer ${coachToken}`)
+                .send({
+                    title: 'Assignment Missing Exercises',
+                    description: 'Assignment with exercises',
+                    parent_group: testGroups.coachGroup._id
+                });
+            expect(res.status).toBe(400);
+        });
+
+        it('returns 400 for invalid group', async () => {
+            const res = await request(app)
+                .post('/assignment/create-with-exercises')
+                .set('Authorization', `Bearer ${coachToken}`)
+                .send({
+                    title: 'Assignment Invalid Group',
+                    description: 'Assignment with exercises',
+                    parent_group: 'invalid',
+                    exercises: [{ name: 'Exercise', cf_code: '1234I' }]
+                });
+            expect(res.status).toBe(400);
+        });
+
+        it('returns 400 for invalid exercise data', async () => {
+            const res = await request(app)
+                .post('/assignment/create-with-exercises')
+                .set('Authorization', `Bearer ${coachToken}`)
+                .send({
+                    title: 'Assignment Invalid Exercise',
+                    description: 'Assignment with exercises',
+                    parent_group: testGroups.coachGroup._id,
+                    exercises: [{ name: 'Exercise' }]
+                });
+            expect(res.status).toBe(400);
+        });
+
+        it('returns 400 for invalid cf_code', async () => {
+            const res = await request(app)
+                .post('/assignment/create-with-exercises')
+                .set('Authorization', `Bearer ${coachToken}`)
+                .send({
+                    title: 'Assignment Invalid Code',
+                    description: 'Assignment with exercises',
+                    parent_group: testGroups.coachGroup._id,
+                    exercises: [{ name: 'Exercise', cf_code: '999Z' }]
+                });
             expect(res.status).toBe(400);
         });
     });

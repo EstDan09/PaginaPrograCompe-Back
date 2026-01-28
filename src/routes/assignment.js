@@ -272,4 +272,79 @@ module.exports = (app) => {
      */
     app.delete("/assignment/delete/:id", coach_ops, AssignmentController.deleteAssignment);
 
+    /**
+     * @openapi
+     * /assignment/create-with-exercises:
+     *   post:
+     *     tags:
+     *       - Assignments
+     *     summary: Create assignment with predefined exercises
+     *     description: Creates a new assignment within a group with predefined exercises. Authentication Admin/Coach
+     *     security:
+     *       - BearerAuth: []
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - title
+     *               - description
+     *               - parent_group
+     *               - exercises
+     *             properties:
+     *               title:
+     *                 type: string
+     *                 description: Assignment title (required, non-empty)
+     *               description:
+     *                 type: string
+     *                 description: Assignment description (required, non-empty)
+     *               parent_group:
+     *                 type: string
+     *                 description: ID of the parent group (required, must be valid MongoDB ObjectId)
+     *               due_date:
+     *                 type: string
+     *                 format: date-time
+     *                 description: Optional due date for the assignment
+     *               exercises:
+     *                 type: array
+     *                 description: List of exercises
+     *                 items:
+     *                   type: object
+     *                   properties:
+     *                     name:
+     *                       type: string
+     *                       description: Exercise name 
+     *                     cf_code:
+     *                       type: string
+     *                       description: Codeforces problem code
+     *     responses:
+     *       '201':
+     *         description: Assignment created successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Assignment'
+     *       '400':
+     *         description: Bad request - Invalid group ID or missing required fields
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       403:
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '500':
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     */
+    app.post("/assignment/create-with-exercises", coach_ops, AssignmentController.createAssignmentWithExercises);
+
 }
