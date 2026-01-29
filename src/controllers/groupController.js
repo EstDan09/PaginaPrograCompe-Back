@@ -2,7 +2,7 @@ const Group = require("../models/Group");
 const User = require("../models/User");
 const StudentGroup = require("../models/StudentGroup");
 const Assignment = require("../models/Assignment");
-const Exercise = require("../models/Assignment");
+const Exercise = require("../models/Exercise");
 const mongoose = require('mongoose');
 
 exports.createGroup = async (req, res) => {
