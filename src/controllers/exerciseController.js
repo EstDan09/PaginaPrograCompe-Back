@@ -55,7 +55,7 @@ exports.getExercises = async (req, res) => {
             const assignmentIds = assignments.map(a => (a._id).toString());
             if (parent_assignment && !assignmentIds.includes(parent_assignment)) {
                 return res.status(403).json({ message: 'You do not have permission to view exercises for this assignment' });
-            } else filter.parent_assignment = { $in: assignmentIds };
+            } else if (!parent_assignment) filter.parent_assignment = { $in: assignmentIds };
         }
         const exercises = await Exercise.find(filter);
         res.status(200).json(exercises);
