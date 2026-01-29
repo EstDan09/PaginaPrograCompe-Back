@@ -163,7 +163,7 @@ exports.getStudentGroupsWithUsername = async (req, res) => {
             const coachGroupIds = coachGroups.map(g => g._id.toString());
             if (group_id && !coachGroupIds.includes(group_id)) {
                 return res.status(403).json({ message: 'You do not have permission to view student groups for this group' });
-            } else filter.group_id = { $in: coachGroupIds };
+            } else if (!group_id) filter.group_id = { $in: coachGroupIds };
         }
         const studentGroups = await StudentGroup.find(filter);
         const studentGroupsWithUsername = await Promise.all(studentGroups.map(async (student_group) => {

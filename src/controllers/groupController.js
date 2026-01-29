@@ -43,7 +43,7 @@ exports.getGroups = async (req, res) => {
         if (req.user.role === 'coach') {
             if (parent_coach && parent_coach !== req.user._id.toString()) {
                 return res.status(403).json({ message: 'Access denied' });
-            } else filter.parent_coach = req.user._id;
+            } else if (!parent_coach) filter.parent_coach = req.user._id;
         }
         const groups = await Group.find(filter);
         res.status(200).json(groups);
