@@ -97,6 +97,12 @@ describe('StudentGroup API', () => {
             .send({ name: 'Coach2 Group', description: 'Group for coach2' });
         testGroups.coach2Group = coach2GroupRes.body;
 
+        const sg1Res = await request(app)
+            .post('/student-group/create')
+            .set('Authorization', `Bearer ${coachToken}`)
+            .send({ student_id: testUsers.student._id.toString(), group_id: testGroups.coachGroup._id });
+        testStudentGroups.sg1 = sg1Res.body;
+
         const sg2Res = await request(app)
             .post('/student-group/create')
             .set('Authorization', `Bearer ${coachToken}`)
@@ -235,10 +241,10 @@ describe('StudentGroup API', () => {
             const res = await request(app)
                 .post('/student-group/create')
                 .set('Authorization', `Bearer ${adminToken}`)
-                .send({ student_id: testUsers.student._id.toString(), group_id: testGroups.coach2Group._id });
+                .send({ student_id: testUsers.student3._id.toString(), group_id: testGroups.coach2Group._id });
 
             expect(res.statusCode).toBe(201);
-            expect(res.body.student_id).toBe(testUsers.student._id.toString());
+            expect(res.body.student_id).toBe(testUsers.student3._id.toString());
             expect(res.body.group_id).toBe(testGroups.coach2Group._id);
         });
 
@@ -311,7 +317,7 @@ describe('StudentGroup API', () => {
             expect(Array.isArray(res.body)).toBe(true);
             expect(res.body.length).toBeGreaterThan(0);
             res.body.forEach(sg => {
-                expect(sg.student_id).toBe(testUsers.student._id.toString());
+                expect(sg.group_id).toBe(testGroups.coachGroup._id);
             });
         });
 
@@ -414,8 +420,8 @@ describe('StudentGroup API', () => {
             expect(Array.isArray(res.body)).toBe(true);
             expect(res.body.length).toBeGreaterThan(0);
             res.body.forEach(sg => {
-                expect(sg.student_id).toBe(testUsers.student._id.toString());
-                expect(sg.student_username).toBe(testUsers.student.username);
+                expect(sg.group_id).toBe(testGroups.coachGroup._id);
+                expect(sg.student_username).toBeDefined();
             });
         });
 
@@ -564,7 +570,7 @@ describe('StudentGroup API', () => {
             const newSGRes = await request(app)
                 .post('/student-group/create')
                 .set('Authorization', `Bearer ${coachToken}`)
-                .send({ student_id: testUsers.student._id.toString(), group_id: testGroups.coachGroup._id });
+                .send({ student_id: testUsers.student5._id.toString(), group_id: testGroups.coachGroup._id });
             const newSG = newSGRes.body;
 
             const res = await request(app)
@@ -588,7 +594,7 @@ describe('StudentGroup API', () => {
             const newSGRes = await request(app)
                 .post('/student-group/create')
                 .set('Authorization', `Bearer ${adminToken}`)
-                .send({ student_id: testUsers.student._id.toString(), group_id: testGroups.coachGroup._id });
+                .send({ student_id: testUsers.student5._id.toString(), group_id: testGroups.coachGroup._id });
             const newSG = newSGRes.body;
 
             const res = await request(app)

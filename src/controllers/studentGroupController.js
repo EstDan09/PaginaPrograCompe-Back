@@ -65,10 +65,16 @@ exports.getStudentGroups = async (req, res) => {
         if (student_id) filter.student_id = student_id;
         if (group_id) filter.group_id = group_id;
         if (req.user.role === 'student') {
-            if (student_id) {
+            if (student_id && student_id !== req.user._id) {
                 return res.status(403).json({ message: 'Access denied' });
             }
-            filter.student_id = req.user._id;
+            if (student_id || group_id) {
+                filter.student_id = req.user._id;
+            } else {
+                const studentGroupsTmp = await StudentGroup.find({student_id: req.user._id});
+                const studentGroupIds = studentGroupsTmp.map(g => g.group_id.toString());
+                filter.group_id = { $in: studentGroupIds };
+            }
         } else if (req.user.role === 'coach') {
             const coachGroups = await Group.find({ parent_coach: req.user._id }).select('_id');
             const coachGroupIds = coachGroups.map(g => g._id.toString());
@@ -154,10 +160,16 @@ exports.getStudentGroupsWithUsername = async (req, res) => {
         if (student_id) filter.student_id = student_id;
         if (group_id) filter.group_id = group_id;
         if (req.user.role === 'student') {
-            if (student_id) {
+            if (student_id && student_id !== req.user._id) {
                 return res.status(403).json({ message: 'Access denied' });
             }
-            filter.student_id = req.user._id;
+            if (student_id || group_id) {
+                filter.student_id = req.user._id;
+            } else {
+                const studentGroupsTmp = await StudentGroup.find({student_id: req.user._id});
+                const studentGroupIds = studentGroupsTmp.map(g => g.group_id.toString());
+                filter.group_id = { $in: studentGroupIds };
+            }
         } else if (req.user.role === 'coach') {
             const coachGroups = await Group.find({ parent_coach: req.user._id }).select('_id');
             const coachGroupIds = coachGroups.map(g => g._id.toString());
