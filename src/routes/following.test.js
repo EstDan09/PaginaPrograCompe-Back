@@ -303,8 +303,6 @@ describe("Following API", () => {
                 .get("/following")
                 .set("Authorization", `Bearer ${studentToken1}`);
             
-            console.log(res.body);
-            
             expect(res.statusCode).toBe(200);
             expect(res.body).toHaveProperty("following");
             expect(Array.isArray(res.body.following)).toBe(true);
