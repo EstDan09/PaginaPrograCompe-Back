@@ -23,6 +23,10 @@ exports.createStudentGroup = async (req, res) => {
         if (req.user.role === 'coach' && group.parent_coach.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'You do not have permission to add students to this group' });
         }
+        const existingMembership = await StudentGroup.findOne({ student_id: student._id, group_id });
+        if (existingMembership) {
+            return res.status(400).json({ message: 'Student is already a member of this group' });
+        }
         const newStudentGroup = await StudentGroup.create({ student_id, group_id });
         res.status(201).json(newStudentGroup);
     } catch (error) {
@@ -49,6 +53,10 @@ exports.addMemberGroup = async (req, res) => {
         }
         if (req.user.role === 'coach' && group.parent_coach.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'You do not have permission to add students to this group' });
+        }
+        const existingMembership = await StudentGroup.findOne({ student_id: student._id, group_id });
+        if (existingMembership) {
+            return res.status(400).json({ message: 'Student is already a member of this group' });
         }
         const newStudentGroup = await StudentGroup.create({ student_id: student._id, group_id });
         res.status(201).json(newStudentGroup);
@@ -163,8 +171,13 @@ exports.getStudentGroupsWithUsername = async (req, res) => {
             if (student_id && student_id !== req.user._id) {
                 return res.status(403).json({ message: 'Access denied' });
             }
-            if (student_id || group_id) {
+            if (student_id) {
                 filter.student_id = req.user._id;
+            } else if (group_id) {
+                const existingMembership = await StudentGroup.findOne({ student_id: req.user._id, group_id });
+                if (!existingMembership) {
+                    return res.status(400).json({ message: 'You are not allowed to query with this group' });
+                }
             } else {
                 const studentGroupsTmp = await StudentGroup.find({student_id: req.user._id});
                 const studentGroupIds = studentGroupsTmp.map(g => g.group_id.toString());
