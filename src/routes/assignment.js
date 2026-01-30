@@ -1,8 +1,10 @@
 const AssignmentController = require("../controllers/assignmentController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const coachMiddleware = require("../middlewares/coachMiddleware");
+const fstudentMiddleware = require("../middlewares/fstudentMiddleware");
 
 const coach_ops = [authMiddleware.auth, coachMiddleware.auth];
+const fstudent_ops = [authMiddleware.auth, fstudentMiddleware.auth];
 const normal_ops = [authMiddleware.auth];
 
 module.exports = (app) => {
@@ -347,4 +349,48 @@ module.exports = (app) => {
      */
     app.post("/assignment/create-with-exercises", coach_ops, AssignmentController.createAssignmentWithExercises);
 
+    /**
+     * @openapi
+     * /assignment/check-completed/{id}:
+     *   get:
+     *     tags:
+     *       - Assignments
+     *     summary: Is completed.
+     *     description: Checks whether an assignment is completed. Authentication Student
+     *     security:
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Assignment ID (must be valid MongoDB ObjectId)
+     *     responses:
+     *       '200':
+     *         description: Whether it's completed or not
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: boolean
+     *       '404':
+     *         description: Assignment not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '403':
+     *         description: Unauthorized
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     *       '500':
+     *         description: Server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Error'
+     */
+    app.get("/assignment/check-completed/:id", fstudent_ops, AssignmentController.checkCompletedAssignment);
 }

@@ -3,6 +3,7 @@ const Group = require("../models/Group");
 const StudentGroup = require("../models/StudentGroup");
 const Assignment = require("../models/Assignment");
 const Exercise = require("../models/Exercise");
+const StudentExercise = require("../models/StudentExercise");
 const CodeforcesService = require("../services/codeforces");
 
 exports.createAssignment = async (req, res) => {
@@ -177,5 +178,62 @@ exports.createAssignmentWithExercises = async (req, res) => {
         res.status(201).json(newAssignment);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+exports.checkCompletedAssignment = async (req, res) => {
+    try {
+        const assignmentId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+            return res.status(404).json({ message: 'Assignment not found' });
+        }
+        const assignment = await Assignment.findById(assignmentId);
+        if (!assignment) {
+            return res.status(404).json({ message: 'Assignment not found' });
+        }
+        if (req.user.role !== 'student') {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+        const membership = await StudentGroup.findOne({ student_id: req.user._id, group_id: assignment.parent_group });
+        if (!membership) {
+            return res.status(403).json({ message: 'You do not have permission to view this assignment' });
+        }
+        if (!req.user.cf_handle) {
+            return res.status(400).json({ message: 'Associated Codeforces account not found' });
+        }
+        const exercises = await Exercise.find({ parent_assignment: assignment._id });
+        let allCompleted = true;
+        for (const exercise of exercises) {
+            const completion = await StudentExercise.findOne({
+                student_id: req.user._id,
+                exercise_id: exercise._id
+            });
+            if (completion) {
+                continue;
+            }
+            const { solved, completionType } = await CodeforcesService.verifyProblemSolved(
+                req.user.cf_handle,
+                exercise.cf_code
+            );
+            if (!solved) {
+                allCompleted = false;
+                continue;
+            }
+            await StudentExercise.findOneAndUpdate(
+                { student_id: req.user._id, exercise_id: exercise._id },
+                {
+                    $setOnInsert: {
+                        student_id: req.user._id,
+                        exercise_id: exercise._id,
+                        completion_type: completionType
+                    }
+                },
+                { new: true, upsert: true }
+            );
+        }
+        res.status(200).json(allCompleted);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };

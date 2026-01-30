@@ -7,6 +7,7 @@ const Group = require('../models/Group');
 const Assignment = require('../models/Assignment');
 const Exercise = require('../models/Exercise');
 const StudentGroup = require('../models/StudentGroup');
+const StudentExercise = require('../models/StudentExercise');
 
 describe('Assignment API', () => {
     let adminToken;
@@ -506,6 +507,103 @@ describe('Assignment API', () => {
         it('unauthenticated user cannot delete assignment', async () => {
             const res = await request(app)
                 .delete(`/assignment/delete/${testAssignments.coachAssignment._id}`);
+            expect(res.status).toBe(401);
+        });
+    });
+
+    describe('Check completed assignment', () => {
+        let completionAssignment;
+        let completionExercises = {};
+        let allSolvedAssignment;
+        let allSolvedExercises = [];
+
+        beforeAll(async () => {
+            completionAssignment = await Assignment.create({
+                title: 'Completion Assignment',
+                description: 'Assignment with mixed completion',
+                parent_group: testGroups.coachGroup._id
+            });
+            completionExercises.solved = await Exercise.create({
+                name: 'Solved Exercise',
+                cf_code: '123A',
+                parent_assignment: completionAssignment._id
+            });
+            completionExercises.unsolved = await Exercise.create({
+                name: 'Unsolved Exercise',
+                cf_code: '999Z',
+                parent_assignment: completionAssignment._id
+            });
+
+            allSolvedAssignment = await Assignment.create({
+                title: 'All Solved Assignment',
+                description: 'Assignment fully solvable in test mode',
+                parent_group: testGroups.coachGroup._id
+            });
+            allSolvedExercises = await Exercise.insertMany([
+                { name: 'Solved One', cf_code: '100A', parent_assignment: allSolvedAssignment._id },
+                { name: 'Solved Two', cf_code: '100B', parent_assignment: allSolvedAssignment._id }
+            ]);
+        });
+
+        it('student gets false and creates entries for solved exercises only', async () => {
+            const res = await request(app)
+                .get(`/assignment/check-completed/${completionAssignment._id}`)
+                .set('Authorization', `Bearer ${studentToken}`);
+            expect(res.status).toBe(200);
+            expect(res.body).toBe(false);
+
+            const solvedEntry = await StudentExercise.findOne({
+                student_id: testUsers.student._id,
+                exercise_id: completionExercises.solved._id
+            });
+            expect(solvedEntry).not.toBeNull();
+            expect(solvedEntry.completion_type).toBe('normal');
+
+            const unsolvedEntry = await StudentExercise.findOne({
+                student_id: testUsers.student._id,
+                exercise_id: completionExercises.unsolved._id
+            });
+            expect(unsolvedEntry).toBeNull();
+        });
+
+        it('student gets true and creates entries for all exercises when all are solved', async () => {
+            const res = await request(app)
+                .get(`/assignment/check-completed/${allSolvedAssignment._id}`)
+                .set('Authorization', `Bearer ${studentToken}`);
+            expect(res.status).toBe(200);
+            expect(res.body).toBe(true);
+
+            const entries = await StudentExercise.find({
+                student_id: testUsers.student._id,
+                exercise_id: { $in: allSolvedExercises.map(e => e._id) }
+            });
+            expect(entries.length).toBe(allSolvedExercises.length);
+        });
+
+        it('student cannot check assignment outside their group', async () => {
+            const res = await request(app)
+                .get(`/assignment/check-completed/${testAssignments.coach2Assignment._id}`)
+                .set('Authorization', `Bearer ${studentToken}`);
+            expect(res.status).toBe(403);
+        });
+
+        it('coach cannot check completion', async () => {
+            const res = await request(app)
+                .get(`/assignment/check-completed/${testAssignments.coachAssignment._id}`)
+                .set('Authorization', `Bearer ${coachToken}`);
+            expect(res.status).toBe(403);
+        });
+
+        it('returns 404 for invalid assignment id', async () => {
+            const res = await request(app)
+                .get('/assignment/check-completed/invalid-id')
+                .set('Authorization', `Bearer ${studentToken}`);
+            expect(res.status).toBe(404);
+        });
+
+        it('unauthenticated user cannot check completion', async () => {
+            const res = await request(app)
+                .get(`/assignment/check-completed/${testAssignments.coachAssignment._id}`);
             expect(res.status).toBe(401);
         });
     });
