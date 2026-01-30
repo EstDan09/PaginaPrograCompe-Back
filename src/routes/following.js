@@ -272,6 +272,9 @@ module.exports = (app) => {
      *                   items:
      *                     type: object
      *                     properties:
+     *                       _id:
+     *                         type: string
+     *                         description: Id of following entry
      *                       name:
      *                         type: string
      *                         description: Username of followed student

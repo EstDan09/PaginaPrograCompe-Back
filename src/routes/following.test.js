@@ -307,6 +307,7 @@ describe("Following API", () => {
             expect(res.body).toHaveProperty("following");
             expect(Array.isArray(res.body.following)).toBe(true);
             expect(res.body.following.length).toBe(2);
+            expect(res.body.following[0]).toHaveProperty("_id");
             expect(res.body.following[0]).toHaveProperty("name");
             expect(res.body.following[0].name).toBe("student2");
             expect(res.body.following[0]).toHaveProperty("student_id");
