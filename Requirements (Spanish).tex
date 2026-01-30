@@ -1,0 +1,207 @@
+\documentclass[12pt,a4paper]{article}
+
+% -----------------------
+% Paquetes básicos
+% -----------------------
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\geometry{margin=1in}
+\onehalfspacing
+
+% -----------------------
+% Datos del documento
+% -----------------------
+\title{\textbf{Especificación de Requisitos de Software (ERS)}\\
+\vspace{0.3cm}
+\large CFTrainer}
+\author{Maximilian Latysh, Esteban Sacaida, Emmanuel Rojas}
+\date{6 de enero de 2026}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\newpage
+
+% =======================
+% 1. Introducción
+% =======================
+\section{Introducción}
+
+\subsection{Propósito}
+El propósito de este documento es definir de manera clara y precisa los requisitos funcionales y no funcionales del sistema \textbf{CFTrainer}. Este documento está dirigido a desarrolladores, profesores, estudiantes y cualquier parte interesada en el desarrollo y uso del sistema.
+
+\subsection{Alcance}
+CFTrainer es una plataforma web cuyo objetivo es ayudar a estudiantes de programación competitiva a visualizar y analizar su progreso en la plataforma Codeforces. El sistema permitirá a los usuarios ver estadísticas y gráficos relacionados con su desempeño, como problemas resueltos, tipos de problemas y evolución en el tiempo.
+
+Además, el sistema permitirá a entrenadores (coaches) crear grupos de estudiantes, enviar invitaciones y monitorear el progreso de sus alumnos de forma centralizada utilizando datos obtenidos a través del API de Codeforces.
+
+\subsection{Definiciones, acrónimos y abreviaturas}
+\begin{itemize}
+  \item ERS: Especificación de Requisitos de Software
+  \item API: Application Programming Interface
+  \item CF: Codeforces
+\end{itemize}
+
+\subsection{Referencias}
+\begin{itemize}
+  \item IEEE Std 830-1998, \textit{Recommended Practice for Software Requirements Specifications}
+  \item Documentación oficial de Codeforces API
+\end{itemize}
+
+\subsection{Visión general del documento}
+Este documento describe la visión general del sistema, sus funciones principales, los tipos de usuarios, las restricciones y los requisitos específicos que debe cumplir CFTrainer.
+
+% =======================
+% 2. Descripción General
+% =======================
+\section{Descripción General}
+
+\subsection{Perspectiva del producto}
+CFTrainer es un sistema independiente que se integra con la plataforma Codeforces mediante su API pública para obtener información de los usuarios. No modifica datos en Codeforces, únicamente consume información para su análisis y visualización.
+
+\subsection{Funciones del producto}
+\begin{itemize}
+  \item Visualización del progreso individual de los estudiantes en Codeforces
+  \item Generación de gráficos estadísticos del desempeño
+  \item Gestión de grupos de entrenamiento
+  \item Monitoreo del progreso de estudiantes por parte de coaches
+\end{itemize}
+
+\subsection{Características de los usuarios}
+\begin{itemize}
+  \item \textbf{Estudiante}: Usuario que desea visualizar su progreso y formar parte de grupos.
+  \item \textbf{Coach}: Usuario que puede crear grupos, invitar estudiantes y visualizar el progreso de sus alumnos.
+\end{itemize}
+
+\subsection{Restricciones}
+\begin{itemize}
+  \item El sistema depende de la disponibilidad y funcionamiento del API de Codeforces.
+  \item El sistema debe funcionar como una aplicación web accesible desde navegadores modernos.
+\end{itemize}
+
+\subsection{Suposiciones y dependencias}
+Se asume que los usuarios cuentan con una cuenta válida en Codeforces y que el API de Codeforces provee datos correctos y actualizados.
+
+% =======================
+% 3. Requisitos Específicos
+% =======================
+\section{Requisitos Específicos}
+
+\subsection{Requisitos Funcionales}
+\begin{enumerate}[label={}, leftmargin=*]
+
+\item[\textbf{RF-1}] El sistema deberá permitir la creación de cuentas de usuario.
+\item[\textbf{RF-2}] El sistema deberá permitir a los usuarios iniciar sesión mediante sus credenciales.
+\item[\textbf{RF-3}] El sistema deberá permitir a los usuarios cerrar sesión.
+
+\item[\textbf{RF-4}] El sistema deberá permitir a los usuarios consultar información pública de otros usuarios.
+\item[\textbf{RF-5}] El sistema deberá permitir la generación de estadísticas públicas de usuarios.
+
+\item[\textbf{RF-6}] El sistema deberá permitir crear usuarios.
+\item[\textbf{RF-7}] El sistema deberá permitir consultar usuarios.
+\item[\textbf{RF-8}] El sistema deberá permitir actualizar usuarios.
+\item[\textbf{RF-9}] El sistema deberá permitir eliminar usuarios.
+
+\item[\textbf{RF-10}] El sistema deberá permitir registrar estudiantes.
+\item[\textbf{RF-11}] El sistema deberá permitir consultar estudiantes.
+\item[\textbf{RF-12}] El sistema deberá permitir actualizar información de estudiantes.
+\item[\textbf{RF-13}] El sistema deberá permitir eliminar estudiantes.
+
+\item[\textbf{RF-14}] El sistema deberá permitir vincular una cuenta de Codeforces a un estudiante.
+\item[\textbf{RF-15}] El sistema deberá permitir confirmar la vinculación de una cuenta de Codeforces mediante el API de Codeforces.
+
+\item[\textbf{RF-16}] El sistema deberá permitir crear grupos.
+\item[\textbf{RF-17}] El sistema deberá permitir consultar grupos.
+\item[\textbf{RF-18}] El sistema deberá permitir actualizar grupos.
+\item[\textbf{RF-19}] El sistema deberá permitir eliminar grupos.
+
+\item[\textbf{RF-20}] El sistema deberá permitir generar enlaces de invitación a grupos.
+\item[\textbf{RF-21}] El sistema deberá permitir que los enlaces de invitación sean temporales o permanentes.
+
+\item[\textbf{RF-22}] El sistema deberá permitir crear asignaciones.
+\item[\textbf{RF-23}] El sistema deberá permitir consultar asignaciones.
+\item[\textbf{RF-24}] El sistema deberá permitir actualizar asignaciones.
+\item[\textbf{RF-25}] El sistema deberá permitir eliminar asignaciones.
+
+\item[\textbf{RF-26}] El sistema deberá permitir crear ejercicios.
+\item[\textbf{RF-27}] El sistema deberá permitir consultar ejercicios.
+\item[\textbf{RF-28}] El sistema deberá permitir actualizar ejercicios.
+\item[\textbf{RF-29}] El sistema deberá permitir eliminar ejercicios.
+
+\item[\textbf{RF-30}] El sistema deberá permitir registrar la participación de estudiantes en grupos.
+\item[\textbf{RF-31}] El sistema deberá permitir consultar participaciones de estudiantes en grupos.
+\item[\textbf{RF-32}] El sistema deberá permitir eliminar participaciones de estudiantes en grupos.
+
+\item[\textbf{RF-33}] El sistema deberá permitir registrar la compleción de ejercicios por parte de los estudiantes.
+\item[\textbf{RF-34}] El sistema deberá permitir consultar compleciones de ejercicios.
+\item[\textbf{RF-35}] El sistema deberá permitir eliminar registros de compleción de ejercicios.
+
+\item[\textbf{RF-36}] El sistema deberá permitir registrar retos personales de estudiantes.
+\item[\textbf{RF-37}] El sistema deberá permitir consultar retos personales.
+\item[\textbf{RF-38}] El sistema deberá permitir actualizar retos personales.
+\item[\textbf{RF-39}] El sistema deberá permitir eliminar retos personales.
+
+\item[\textbf{RF-40}] El sistema deberá permitir verificar la compleción de ejercicios mediante el API de Codeforces.
+\item[\textbf{RF-41}] El sistema deberá permitir verificar la compleción de retos personales mediante el API de Codeforces.
+
+\item[\textbf{RF-42}] El sistema deberá permitir registrar el tipo de resolución de un ejercicio o reto personal.
+
+\item[\textbf{RF-43}] El sistema deberá permitir crear foros asociados a grupos.
+\item[\textbf{RF-44}] El sistema deberá permitir consultar foros de grupos.
+\item[\textbf{RF-45}] El sistema deberá permitir publicar mensajes en foros de grupos.
+\item[\textbf{RF-46}] El sistema deberá permitir eliminar mensajes de foros de grupos.
+
+\item[\textbf{RF-47}] El sistema deberá permitir el intercambio de mensajes entre estudiantes vinculados.
+\item[\textbf{RF-48}] El sistema deberá permitir el intercambio de mensajes entre coaches y estudiantes.
+
+\item[\textbf{RF-49}] El sistema deberá generar estadísticas de compleción de ejercicios en una asignación.
+\item[\textbf{RF-50}] El sistema deberá generar estadísticas de compleción de asignaciones y ejercicios en un grupo.
+\item[\textbf{RF-51}] El sistema deberá generar estadísticas de rendimiento de los estudiantes en un grupo.
+
+\end{enumerate}
+
+\subsection{Requisitos No Funcionales}
+
+\subsubsection{Rendimiento}
+\begin{itemize}[label=--]
+  \item \textbf{RNF-01:} El sistema deberá cargar la información del usuario en un tiempo razonable.
+\end{itemize}
+
+\subsubsection{Seguridad}
+\begin{itemize}[label=--]
+  \item \textbf{RNF-02:} El sistema deberá proteger la información de los usuarios.
+\end{itemize}
+
+\subsubsection{Usabilidad}
+\begin{itemize}[label=--]
+  \item \textbf{RNF-03:} El sistema deberá contar con una interfaz intuitiva y fácil de usar.
+\end{itemize}
+
+\subsection{Requisitos de Interfaces Externas}
+
+\subsubsection{Interfaces de Usuario}
+El sistema contará con una interfaz web accesible desde navegadores modernos.
+
+\subsubsection{Interfaces de Hardware}
+No aplica.
+
+\subsubsection{Interfaces de Software}
+El sistema utilizará el API de Codeforces para la obtención de datos y una base de datos para almacenar información de usuarios y grupos.
+
+% =======================
+% 4. Apéndices
+% =======================
+\section{Apéndices}
+No aplica.
+
+\end{document}
