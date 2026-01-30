@@ -130,20 +130,57 @@ exports.verifyChallenge = async (req, res) => {
 
 exports.askChallenge = async (req, res) => {
     try {
-        const { min_rating, max_rating, tags } = req.body;
-        if (min_rating && typeof min_rating !== 'number') {
-            return res.status(400).json({ message: 'Invalid min_rating' });
+        const { min_rating, max_rating, tags } = req.query;
+        let minRating = min_rating;
+        let maxRating = max_rating;
+        if (minRating !== undefined) {
+            if (Array.isArray(minRating)) {
+                return res.status(400).json({ message: 'Invalid min_rating' });
+            }
+            minRating = Number(minRating);
+            if (Number.isNaN(minRating)) {
+                return res.status(400).json({ message: 'Invalid min_rating' });
+            }
         }
-        if (max_rating && typeof max_rating !== 'number') {
-            return res.status(400).json({ message: 'Invalid max_rating' });
+        if (maxRating !== undefined) {
+            if (Array.isArray(maxRating)) {
+                return res.status(400).json({ message: 'Invalid max_rating' });
+            }
+            maxRating = Number(maxRating);
+            if (Number.isNaN(maxRating)) {
+                return res.status(400).json({ message: 'Invalid max_rating' });
+            }
         }
-        if (tags && !Array.isArray(tags)) {
-            return res.status(400).json({ message: 'Invalid tags' });
+        let tagList = tags;
+        if (tagList !== undefined) {
+            if (Array.isArray(tagList)) {
+                if (tagList.some(tag => tag === '')) {
+                    return res.status(400).json({ message: 'Invalid tags' });
+                }
+            } else if (typeof tagList === 'string') {
+                if (tagList === '') {
+                    return res.status(400).json({ message: 'Invalid tags' });
+                }
+                tagList = tagList
+                    .split(',')
+                    .map(tag => tag.trim())
+                    .filter(tag => tag !== '');
+                if (tagList.length === 0) {
+                    return res.status(400).json({ message: 'Invalid tags' });
+                }
+            } else {
+                return res.status(400).json({ message: 'Invalid tags' });
+            }
         }
-        if (min_rating && max_rating && min_rating > max_rating) {
+        if (minRating !== undefined && maxRating !== undefined && minRating > maxRating) {
             return res.status(400).json({ message: 'min_rating cannot be greater than max_rating' });
         }
-        const cf_problem = await CodeforcesService.getRandomUnsolvedFilteredProblem(req.user.cf_handle, min_rating ? min_rating : 800, max_rating ? max_rating : 3500, tags ? tags : []);
+        const cf_problem = await CodeforcesService.getRandomUnsolvedFilteredProblem(
+            req.user.cf_handle,
+            minRating !== undefined ? minRating : 800,
+            maxRating !== undefined ? maxRating : 3500,
+            tagList !== undefined ? tagList : []
+        );
         res.status(200).json(cf_problem);
     } catch (error) {
         console.error(error);
