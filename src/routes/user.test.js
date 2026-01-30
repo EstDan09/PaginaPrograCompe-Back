@@ -60,6 +60,20 @@ describe("User API", () => {
             expect(res.body.username).toBe("newuser");
         });
 
+        it("admin create rejects non-string fields", async () => {
+            const res = await request(app)
+                .post("/admin/create")
+                .set("Authorization", `Bearer ${adminToken}`)
+                .send({
+                    username: { $ne: "x" },
+                    password: "pass123",
+                    email: "bad@test.com",
+                    role: "student"
+                });
+
+            expect(res.statusCode).toBe(400);
+        });
+
         it("non-admin cannot create a new user", async () => {
             const res = await request(app)
                 .post("/admin/create")
@@ -88,6 +102,16 @@ describe("User API", () => {
 
             expect(res.statusCode).toBe(200);
             expect(res.body.email).toBe("newemail@student.com");
+        });
+
+        it("admin update rejects non-string fields", async () => {
+            const userId = testUsers.coach._id;
+            const res = await request(app)
+                .put(`/admin/update/${userId}`)
+                .set("Authorization", `Bearer ${adminToken}`)
+                .send({ email: { $ne: "x" } });
+
+            expect(res.statusCode).toBe(400);
         });
 
         it("admin can delete a user", async () => {
@@ -132,6 +156,15 @@ describe("User API", () => {
             expect(res.body.email).toBe("updated@student.com");
         });
 
+        it("student update rejects non-string fields", async () => {
+            const res = await request(app)
+                .put("/user/update")
+                .set("Authorization", `Bearer ${studentToken}`)
+                .send({ email: { $ne: "x" } });
+
+            expect(res.statusCode).toBe(400);
+        });
+
         it("student can delete own account", async () => {
             const { user, token } = await createAndLoginUser({ username: "tobedeleted", password: "pass", role: "student" });
 
@@ -169,6 +202,14 @@ describe("User API", () => {
                 .set("Authorization", `Bearer ${studentToken}`);
 
             expect(res.statusCode).toBe(403);
+        });
+
+        it("rejects blank username", async () => {
+            const res = await request(app)
+                .get("/user/get-by-username/%20")
+                .set("Authorization", `Bearer ${studentToken}`);
+
+            expect(res.statusCode).toBe(400);
         });
     });
 });

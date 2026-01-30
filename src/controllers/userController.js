@@ -2,9 +2,18 @@ const User = require('../models/User');
 const CFAccount = require('../models/CFAccount');
 const mongoose = require('mongoose');
 
+const isNonEmptyString = (value) => typeof value === 'string' && value.trim().length > 0;
+const isOptionalString = (value) => value === undefined || typeof value === 'string';
+
 exports.createUser = async (req, res) => {
     try {
         const { username, password, email, role, cf_account } = req.body;
+        if (!isNonEmptyString(username) || !isNonEmptyString(password) || !isNonEmptyString(email)) {
+            return res.status(400).json({ message: 'Invalid username, password, or email' });
+        }
+        if (!isOptionalString(role) || !isOptionalString(cf_account)) {
+            return res.status(400).json({ message: 'Invalid role or cf_account' });
+        }
         if (role && !['student', 'coach', 'admin'].includes(role)) {
             return res.status(400).json({ message: 'Invalid role' });
         }
@@ -25,6 +34,9 @@ exports.createUser = async (req, res) => {
 exports.getUsers = async (req, res) => {
     try {
         const {username, password_hash, email, role} = req.query;
+        if (![username, password_hash, email, role].every(isOptionalString)) {
+            return res.status(400).json({ message: 'Invalid query parameters' });
+        }
         const filter = {};
 
         if (username) filter.username = username;
@@ -65,6 +77,9 @@ exports.updateUser = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
         const { password, email, role } = req.body;
+        if (![password, email, role].every(isOptionalString)) {
+            return res.status(400).json({ message: 'Invalid update fields' });
+        }
         if (role && !['student', 'coach', 'admin'].includes(role)) {
             return res.status(400).json({ message: 'Invalid role' });
         }
@@ -105,6 +120,9 @@ exports.deleteUser = async (req, res) => {
 exports.getByUsername = async (req, res) => {
     try {
         const username = req.params.username;
+        if (!isNonEmptyString(username)) {
+            return res.status(400).json({ message: 'Invalid username' });
+        }
         const user = await User.findOne({username});
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -119,6 +137,9 @@ exports.getByUsername = async (req, res) => {
 exports.safeGetUsers = async (req, res) => {
     try {
         const {username, email, role} = req.query;
+        if (![username, email, role].every(isOptionalString)) {
+            return res.status(400).json({ message: 'Invalid query parameters' });
+        }
         const filter = {};
 
         if (username) filter.username = username;
@@ -163,6 +184,9 @@ exports.safeUpdateUser = async (req, res) => {
     try {
         const userId = req.user._id;
         const { password, email} = req.body;
+        if (![password, email].every(isOptionalString)) {
+            return res.status(400).json({ message: 'Invalid update fields' });
+        }
         const updateData = {};
         if (password) updateData.password_hash = password;
         if (email) updateData.email = email;
@@ -210,6 +234,9 @@ exports.getMyProfile = async (req, res) => {
 exports.safeGetByUsername = async (req, res) => {
     try {
         const username = req.params.username;
+        if (!isNonEmptyString(username)) {
+            return res.status(400).json({ message: 'Invalid username' });
+        }
         const user = await User.findOne({username}, '_id username email role');
         if (!user) {
             return res.status(404).json({ message: 'User not found' });

@@ -61,6 +61,19 @@ describe("Auth API", () => {
 
             expect(res.statusCode).toBe(400);
         });
+
+        it("rejects non-string fields", async () => {
+            const res = await request(app)
+                .post("/auth/register")
+                .send({
+                    username: { $ne: "x" },
+                    password: "password123",
+                    email: "test3@test.com",
+                    role: { $ne: "student" }
+                });
+
+            expect(res.statusCode).toBe(400);
+        });
     });
 
     describe("POST /auth/login", () => {
@@ -82,6 +95,17 @@ describe("Auth API", () => {
                 .send({
                     username: "testuser",
                     password: "wrongpassword"
+                });
+
+            expect(res.statusCode).toBe(400);
+        });
+
+        it("rejects non-string username/password", async () => {
+            const res = await request(app)
+                .post("/auth/login")
+                .send({
+                    username: { $ne: "testuser" },
+                    password: ["not", "string"]
                 });
 
             expect(res.statusCode).toBe(400);

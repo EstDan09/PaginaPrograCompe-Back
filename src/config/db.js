@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
 
+// Prevent MongoDB operator injection in filters
+mongoose.set("sanitizeFilter", true);
+
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.DB_URL, {
