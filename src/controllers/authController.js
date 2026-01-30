@@ -4,9 +4,15 @@ const User = require('../models/User');
 const CFAccount = require('../models/CFAccount');
 const CodeforcesService = require('../services/codeforces');
 
+const isNonEmptyString = (value) => typeof value === 'string' && value.trim().length > 0;
+const isOptionalString = (value) => value === undefined || typeof value === 'string';
+
 exports.loginUser = async (req, res) => {
     try {
         const { username, password } = req.body;
+        if (!isNonEmptyString(username) || !isNonEmptyString(password)) {
+            return res.status(400).json({ message: 'Invalid username or password' });
+        }
         const user = await User.findOne({ username });
         if (!user) {
             return res.status(400).json({ message: 'Invalid username or password' });
@@ -35,6 +41,12 @@ exports.loginUser = async (req, res) => {
 exports.registerUser = async (req, res) => {
     try {
         const { username, password, email, role, cf_account } = req.body;
+        if (!isNonEmptyString(username) || !isNonEmptyString(password) || !isNonEmptyString(email)) {
+            return res.status(400).json({ message: 'Invalid username, password, or email' });
+        }
+        if (!isOptionalString(role) || !isOptionalString(cf_account)) {
+            return res.status(400).json({ message: 'Invalid role or cf_account' });
+        }
         if (role && !['student', 'coach'].includes(role)) {
             return res.status(400).json({ message: 'Invalid role' });
         }
