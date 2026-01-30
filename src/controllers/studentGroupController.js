@@ -86,14 +86,14 @@ exports.getStudentGroups = async (req, res) => {
             } else {
                 const studentGroupsTmp = await StudentGroup.find({student_id: req.user._id});
                 const studentGroupIds = studentGroupsTmp.map(g => g.group_id.toString());
-                filter.group_id = { $in: studentGroupIds };
+                filter.group_id = mongoose.trusted({ $in: studentGroupIds });
             }
         } else if (req.user.role === 'coach') {
             const coachGroups = await Group.find({ parent_coach: req.user._id }).select('_id');
             const coachGroupIds = coachGroups.map(g => g._id.toString());
             if (group_id && !coachGroupIds.includes(group_id)) {
                 return res.status(403).json({ message: 'You do not have permission to view student groups for this group' });
-            } else filter.group_id = { $in: coachGroupIds };
+            } else filter.group_id = mongoose.trusted({ $in: coachGroupIds });
         }
         const studentGroups = await StudentGroup.find(filter);
         res.status(200).json(studentGroups);
@@ -186,14 +186,14 @@ exports.getStudentGroupsWithUsername = async (req, res) => {
             } else {
                 const studentGroupsTmp = await StudentGroup.find({student_id: req.user._id});
                 const studentGroupIds = studentGroupsTmp.map(g => g.group_id.toString());
-                filter.group_id = { $in: studentGroupIds };
+                filter.group_id = mongoose.trusted({ $in: studentGroupIds });
             }
         } else if (req.user.role === 'coach') {
             const coachGroups = await Group.find({ parent_coach: req.user._id }).select('_id');
             const coachGroupIds = coachGroups.map(g => g._id.toString());
             if (group_id && !coachGroupIds.includes(group_id)) {
                 return res.status(403).json({ message: 'You do not have permission to view student groups for this group' });
-            } else if (!group_id) filter.group_id = { $in: coachGroupIds };
+            } else if (!group_id) filter.group_id = mongoose.trusted({ $in: coachGroupIds });
         }
         const studentGroups = await StudentGroup.find(filter);
         const studentGroupsWithUsername = await Promise.all(studentGroups.map(async (student_group) => {

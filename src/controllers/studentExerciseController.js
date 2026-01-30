@@ -69,14 +69,16 @@ exports.getStudentExercises = async (req, res) => {
         if (assignment_id) {
             const exercises = await Exercise.find({ parent_assignment: assignment_id }).select('_id');
             const exerciseIds = exercises.map(e => e._id);
-            filter.exercise_id = { $in: exerciseIds };
+            filter.exercise_id = mongoose.trusted({ $in: exerciseIds });
         }
         if (group_id) {
             const assignments = await Assignment.find({ parent_group: group_id }).select('_id');
             const assignmentIds = assignments.map(a => a._id);
-            const exercises = await Exercise.find({ parent_assignment: { $in: assignmentIds } }).select('_id');
+            const exercises = await Exercise.find({
+                parent_assignment: mongoose.trusted({ $in: assignmentIds })
+            }).select('_id');
             const exerciseIds = exercises.map(e => e._id);
-            filter.exercise_id = { $in: exerciseIds };
+            filter.exercise_id = mongoose.trusted({ $in: exerciseIds });
         }
         if (completion_type) filter.completion_type = completion_type;
         if (req.user.role === 'student') {
@@ -93,11 +95,15 @@ exports.getStudentExercises = async (req, res) => {
             } else {
                 const coachGroups = await Group.find({ parent_coach: req.user._id }).select('_id');
                 const coachGroupIds = coachGroups.map(g => g._id);
-                const coachAssignments = await Assignment.find({ parent_group: { $in: coachGroupIds } }).select('_id');
+                const coachAssignments = await Assignment.find({
+                    parent_group: mongoose.trusted({ $in: coachGroupIds })
+                }).select('_id');
                 const coachAssignmentIds = coachAssignments.map(a => a._id);
-                const coachExercises = await Exercise.find({ parent_assignment: { $in: coachAssignmentIds } }).select('_id');
+                const coachExercises = await Exercise.find({
+                    parent_assignment: mongoose.trusted({ $in: coachAssignmentIds })
+                }).select('_id');
                 const coachExerciseIds = coachExercises.map(e => e._id);
-                filter.exercise_id = { $in: coachExerciseIds };
+                filter.exercise_id = mongoose.trusted({ $in: coachExerciseIds });
             }
         }
         const studentExercises = await StudentExercise.find(filter);
