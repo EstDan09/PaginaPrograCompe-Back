@@ -51,11 +51,13 @@ exports.getExercises = async (req, res) => {
                await Group.find({ parent_coach: req.user._id }).select('_id') :
                await StudentGroup.find({ student_id: req.user._id }).select('group_id'); 
             const groupIds = groups.map(g => req.user.role === 'coach' ? g._id : g.group_id);
-            const assignments = await Assignment.find({ parent_group: { $in: groupIds } }).select('_id');
+            const assignments = await Assignment.find({
+                parent_group: mongoose.trusted({ $in: groupIds })
+            }).select('_id');
             const assignmentIds = assignments.map(a => (a._id).toString());
             if (parent_assignment && !assignmentIds.includes(parent_assignment)) {
                 return res.status(403).json({ message: 'You do not have permission to view exercises for this assignment' });
-            } else if (!parent_assignment) filter.parent_assignment = { $in: assignmentIds };
+            } else if (!parent_assignment) filter.parent_assignment = mongoose.trusted({ $in: assignmentIds });
         }
         const exercises = await Exercise.find(filter);
         res.status(200).json(exercises);

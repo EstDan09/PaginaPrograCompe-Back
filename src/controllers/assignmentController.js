@@ -48,7 +48,7 @@ exports.getAssignments = async (req, res) => {
             const groupIds = groups.map(g => req.user.role === 'coach' ? g._id.toString() : g.group_id.toString());
             if (parent_group && !groupIds.includes(parent_group)) {
                 return res.status(403).json({ message: 'You do not have permission to view assignments for this group' });
-            } else if (!parent_group) filter.parent_group = { $in: groupIds };
+            } else if (!parent_group) filter.parent_group = mongoose.trusted({ $in: groupIds });
         }
         const assignments = await Assignment.find(filter);
         res.status(200).json(assignments);

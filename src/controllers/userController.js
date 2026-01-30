@@ -149,7 +149,7 @@ exports.safeGetUsers = async (req, res) => {
                 return res.status(400).json({ message: 'Invalid role' });
             }
             filter.role = role;
-        } else filter.role = { $ne: 'admin' };
+        } else filter.role = mongoose.trusted({ $ne: 'admin' });
 
         const users = await User.find(filter, '_id username email role' );
         
