@@ -335,6 +335,7 @@ module.exports = (app) => {
      *         name: tags
      *         schema:
      *           type: string
+     *           description: list of problem tags separated by comma
      *     responses:
      *       200:
      *         description: Challenge problem found
