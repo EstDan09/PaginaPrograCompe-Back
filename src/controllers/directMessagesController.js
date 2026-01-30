@@ -32,10 +32,10 @@ exports.getConversations = async (req, res) => {
     try {
         const userId = req.user._id;
         const messages = await DirectMessage.find({ 
-            $or: [
+            $or: mongoose.trusted([
                 { sender_id: userId },
                 { receiver_id: userId }
-            ]
+            ])
         }).sort({ createdAt: -1 });
 
         const conversationMap = new Map();
@@ -65,10 +65,10 @@ exports.getConversation = async (req, res) => {
         }
 
         const messages = await DirectMessage.find({
-            $or: [
+            $or: mongoose.trusted([
                 { sender_id: userId, receiver_id: otherUserId },
                 { sender_id: otherUserId, receiver_id: userId }
-            ]
+            ])
         }).sort({ createdAt: 1 });
         
         res.status(200).json(messages);

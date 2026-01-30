@@ -195,7 +195,7 @@ exports.deleteGroupInviteCode = async (req, res) => {
         if (!group.invite_code) {
             return res.status(400).json({ message: 'No invite code to delete' });
         }
-        await Group.findByIdAndUpdate(groupId, { $unset: { invite_code: '' } });
+        await Group.findByIdAndUpdate(groupId, { $unset: mongoose.trusted({ invite_code: '' }) });
         res.status(200).json({ message: 'Invite code deleted successfully' });
     } catch (error) {
         console.error(error);
@@ -277,7 +277,7 @@ exports.getMyGroupsSummary = async (req, res) => {
         } else if (req.user.role === 'student') {
             const studentGroups = await StudentGroup.find({ student_id: req.user._id }).select('group_id');
             const groupIds = studentGroups.map(sg => sg.group_id);
-            groups = await Group.find({ _id: { $in: groupIds } });
+            groups = await Group.find({ _id: mongoose.trusted({ $in: groupIds }) });
         } else {
             return res.status(403).json({ message: 'Access denied' });
         }
@@ -287,7 +287,10 @@ exports.getMyGroupsSummary = async (req, res) => {
             const role = (req.user.role === 'coach') ? 'Coach' : 'Student';
             let dueAssignmentsCount = 0;
             if (role === 'Student') {
-                const assignments = await Assignment.find({ parent_group: group._id, due_date: { $gte: new Date() } });
+                const assignments = await Assignment.find({
+                    parent_group: group._id,
+                    due_date: mongoose.trusted({ $gte: new Date() })
+                });
                 for (const assignment of assignments) {
                     const exercises = await Exercise.find({ parent_assignment: assignment._id });
                     let allCompleted = true;
